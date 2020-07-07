@@ -15,7 +15,8 @@ from bs4 import BeautifulSoup
 from TweetNormalizer import normalizeTweet
 #%matplotlib inline
 
-from sklearn.linear_model import LogisticRegression
+
+from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
@@ -39,16 +40,33 @@ df_test = pd.read_csv('/home/vina/Desktop/W-NUT/test.tsv', sep='\t')
 X_test = df_test.Text.apply(normalizeTweet)
 y_test = df_test.Label
 
-# Logistic regression 'pipeline'
+# SVM 'pipeline'
 # Vectorizer => Transformer => Classifier
-logreg = Pipeline([('vect', CountVectorizer()),
+sgd = Pipeline([('vect', CountVectorizer()),
                 ('tfidf', TfidfTransformer()),
-                ('clf', LogisticRegression(n_jobs=1, C=1e5)),
+                ('clf', SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5, tol=None)),
                ])
 
-logreg.fit(X_train, y_train)
+# Our way
+bert = ...
+embeddingg = bert(input)
 
-y_pred = logreg.predict(X_test)
+label => 0/1
+
+from sklearn.ensemble import SVC
+svm = SVC()
+
+# Train SVM
+svm.fit(embedding, label)
+
+# 
+
+
+
+
+sgd.fit(X_train, y_train)
+
+y_pred = sgd.predict(X_test)
 
 my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
 
