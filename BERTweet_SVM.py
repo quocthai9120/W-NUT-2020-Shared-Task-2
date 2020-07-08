@@ -1,4 +1,7 @@
 # NOTE: valid.tsv has been renamed to test.tsv. You still need to think about how to "test" the data
+
+# from sklearn.ensemble import SVC
+
 import logging
 import pandas as pd
 import numpy as np
@@ -13,7 +16,9 @@ from nltk.corpus import stopwords
 import re
 from bs4 import BeautifulSoup
 from TweetNormalizer import normalizeTweet
-#%matplotlib inline
+
+from BERT_embeddings import get_bert_embedding
+# %matplotlib inline
 
 
 from sklearn.linear_model import SGDClassifier
@@ -22,21 +27,23 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
 
 # Read data in
-df = pd.read_csv('/home/vina/Desktop/W-NUT/train.tsv', sep='\t')
+df = pd.read_csv(
+    '/Users/qthai912/Desktop/VinAI_Intern/W-NUT-2020-Shared-Task-2/train.tsv', sep='\t', lineterminator='\n', header=0)
+
 df = df[pd.notnull(df['Label'])]
-#print(df.head(10))
-#print(df['Text'].apply(lambda x: len(x.split(' '))).sum())
+# print(df.head(10))
+# print(df['Text'].apply(lambda x: len(x.split(' '))).sum())
 
 # Normalizing the tweets
 df['Text'] = df['Text'].apply(normalizeTweet)
-#print(df.tail(10))
 
 # Prepare data to train the model
 X_train = df.Text
 y_train = df.Label
 
 # Prepare data to test the model after training
-df_test = pd.read_csv('/home/vina/Desktop/W-NUT/test.tsv', sep='\t')
+df_test = pd.read_csv(
+    '/Users/qthai912/Desktop/VinAI_Intern/W-NUT-2020-Shared-Task-2/test.tsv', sep='\t')
 X_test = df_test.Text.apply(normalizeTweet)
 y_test = df_test.Label
 
@@ -44,31 +51,28 @@ y_test = df_test.Label
 # Vectorizer => Transformer => Classifier
 sgd = Pipeline([('vect', CountVectorizer()),
                 ('tfidf', TfidfTransformer()),
-                ('clf', SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5, tol=None)),
-               ])
+                ('clf', SGDClassifier(loss='hinge', penalty='l2',
+                                      alpha=1e-3, random_state=42, max_iter=5, tol=None)),
+                ])
 
 # Our way
-bert = ...
-embeddingg = bert(input)
+print(type(X_train))
+X_train_embeddings = get_bert_embedding(X_train[4373:4375])
 
-label => 0/1
-
-from sklearn.ensemble import SVC
-svm = SVC()
+# print(len(X_train))
+# print(X_train[1106])
 
 # Train SVM
-svm.fit(embedding, label)
+# svm.fit(embedding, label)
 
-# 
-
-
+#
 
 
-sgd.fit(X_train, y_train)
+# sgd.fit(X_train, y_train)
 
-y_pred = sgd.predict(X_test)
+# y_pred = sgd.predict(X_test)
 
-my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
+# my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
 
-print('accuracy %s' % accuracy_score(y_pred, y_test))
-print(classification_report(y_test, y_pred,target_names=my_tags))
+# print('accuracy %s' % accuracy_score(y_pred, y_test))
+# print(classification_report(y_test, y_pred, target_names=my_tags))
