@@ -1,3 +1,4 @@
 env/
 fairseq/
 BERTweet_base_transformers/
+__pycache__/
