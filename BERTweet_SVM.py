@@ -2,6 +2,7 @@
 
 # from sklearn.ensemble import SVC
 
+import torch
 import logging
 import pandas as pd
 import numpy as np
@@ -56,11 +57,8 @@ sgd = Pipeline([('vect', CountVectorizer()),
                 ])
 
 # Our way
-print(type(X_train))
-X_train_embeddings = get_bert_embedding(X_train[4373:4375])
-
-# print(len(X_train))
-# print(X_train[1106])
+X_train_embeddings = get_bert_embedding(X_train)
+X_test_embeddings = get_bert_embedding(X_test)
 
 # Train SVM
 # svm.fit(embedding, label)
