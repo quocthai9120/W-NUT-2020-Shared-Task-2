@@ -20,16 +20,18 @@ from TweetNormalizer import normalizeTweet
 
 from BERT_embeddings import get_bert_embedding
 # %matplotlib inline
+import os
 
-
-from sklearn.linear_model import SGDClassifier
+from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
 
+import pickle
+
 # Read data in
 df = pd.read_csv(
-    '/Users/qthai912/Desktop/VinAI_Intern/W-NUT-2020-Shared-Task-2/train.tsv', sep='\t', lineterminator='\n', header=0)
+    './train.tsv', sep='\t', lineterminator='\n', header=0)
 
 df = df[pd.notnull(df['Label'])]
 # print(df.head(10))
@@ -44,32 +46,55 @@ y_train = df.Label
 
 # Prepare data to test the model after training
 df_test = pd.read_csv(
-    '/Users/qthai912/Desktop/VinAI_Intern/W-NUT-2020-Shared-Task-2/test.tsv', sep='\t')
+    './test.tsv', sep='\t')
 X_test = df_test.Text.apply(normalizeTweet)
 y_test = df_test.Label
 
-# SVM 'pipeline'
-# Vectorizer => Transformer => Classifier
-sgd = Pipeline([('vect', CountVectorizer()),
-                ('tfidf', TfidfTransformer()),
-                ('clf', SGDClassifier(loss='hinge', penalty='l2',
-                                      alpha=1e-3, random_state=42, max_iter=5, tol=None)),
-                ])
+X_train_embeddings = None
+X_test_embeddings = None
+# Train set
+train_filename = "./train-embeddings.pkl"
+if os.path.isfile('{}'.format(train_filename)):
+    infile = open(train_filename, 'rb')
+    X_train_embeddings = pickle.load(infile)
+    infile.close()    
+else:
+    X_train_embeddings = get_bert_embedding([X_train[i] for i in range(5)])
+    outfile = open(train_filename, 'wb')
+    pickle.dump(X_train_embeddings, outfile)
+    outfile.close()
 
-# Our way
-X_train_embeddings = get_bert_embedding(X_train)
-X_test_embeddings = get_bert_embedding(X_test)
+print(X_train_embeddings[0])
+
+# Test set
+test_filename = "./test-embeddings.pkl"
+if os.path.isfile('{}'.format(test_filename)):
+    infile = open(test_filename, 'rb')
+    X_test_embeddings = pickle.load(infile)
+    infile.close()    
+else:
+    X_test_embeddings = get_bert_embedding([X_test[i] for i in range(5)])
+    outfile = open(test_filename, 'wb')
+    pickle.dump(X_test_embeddings, outfile)
+    outfile.close()
+
+
+y_train = y_train.replace('INFORMATIVE', 1)
+y_train = y_train.replace('UNINFORMATIVE', 0)
+
+y_test = y_test.replace('INFORMATIVE', 1)
+y_test = y_test.replace('UNINFORMATIVE', 0)
+
+svm = SVC()
 
 # Train SVM
-# svm.fit(embedding, label)
+svm.fit(X_train_embeddings, y_train)
 
-#
+# Predict on X_test
+y_pred = svm.predict(X_test_embeddings)
 
-# sgd.fit(X_train, y_train)
+# Print info on prediction
+my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
 
-# y_pred = sgd.predict(X_test)
-
-# my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
-
-# print('accuracy %s' % accuracy_score(y_pred, y_test))
-# print(classification_report(y_test, y_pred, target_names=my_tags))
+print('accuracy %s' % accuracy_score(y_pred, y_test))
+print(classification_report(y_test, y_pred, target_names=my_tags))
