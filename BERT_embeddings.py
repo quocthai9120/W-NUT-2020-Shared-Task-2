@@ -57,6 +57,6 @@ def get_bert_embedding(lines: List[str]) -> List[torch.Tensor]:
         with torch.no_grad():
             features = BERTweet(all_input_ids)
 
-        result.append(features[0][:, 0, :])
+        result.append(features[0][:, 0, :].numpy())
 
     return result
