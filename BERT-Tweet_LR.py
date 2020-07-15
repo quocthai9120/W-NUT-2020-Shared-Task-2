@@ -64,8 +64,6 @@ else:
     pickle.dump(X_train_embeddings, outfile)
     outfile.close()
 
-print(X_train_embeddings[0])
-
 # Test set
 test_filename = "./test-embeddings.pkl"
 if os.path.isfile('{}'.format(test_filename)):
