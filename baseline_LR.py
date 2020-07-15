@@ -23,6 +23,12 @@ from sklearn.metrics import classification_report
 # Read data in
 df = pd.read_csv('/home/vina/Desktop/W-NUT/train.tsv', sep='\t')
 df = df[pd.notnull(df['Label'])]
+
+# Count number of instances to read data in
+# Quotation error
+print("Number of instances in the dataframe is {}".format(df['Label'].value_counts()))
+
+
 #print(df.head(10))
 #print(df['Text'].apply(lambda x: len(x.split(' '))).sum())
 

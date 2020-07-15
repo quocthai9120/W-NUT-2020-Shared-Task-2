@@ -67,7 +67,6 @@ X_train_embeddings = get_bert_embedding(X_train[4373:4375])
 
 #
 
-
 # sgd.fit(X_train, y_train)
 
 # y_pred = sgd.predict(X_test)
