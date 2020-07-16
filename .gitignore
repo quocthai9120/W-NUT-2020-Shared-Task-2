@@ -2,3 +2,5 @@ env/
 fairseq/
 BERTweet_base_transformers/
 __pycache__/
+weights/
+
