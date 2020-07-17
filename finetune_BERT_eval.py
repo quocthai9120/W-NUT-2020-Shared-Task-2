@@ -41,16 +41,9 @@ else:
     print('No GPU available, using the CPU instead.')
     device = torch.device("cpu")
 
-model = BertForSequenceClassification.from_pretrained(
-    "bert-base-uncased",  # Use the 12-layer BERT model, with an uncased vocab.
-    num_labels=2,  # The number of output labels--2 for binary classification.
-    # You can increase this for multi-class tasks.
-    output_attentions=False,  # Whether the model returns attentions weights.
-    output_hidden_states=False,  # Whether the model returns all hidden-states.
-)
-model.load_state_dict(torch.load("weights/weights.pth"))
+model = torch.load("weights/weights.pth", map_location=device)
 
-model.cuda()
+# model.cuda()
 
 # Prepare data to test the model after training
 df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
@@ -101,6 +94,7 @@ prediction_dataloader = DataLoader(
     prediction_data, sampler=prediction_sampler, batch_size=batch_size)
 
 ################# TEST ##################
+total_eval_accuracy = 0
 
 # Prediction on test set
 print('Predicting labels for {:,} test sentences...'.format(
@@ -110,6 +104,7 @@ model.eval()
 # Tracking variables
 predictions, true_labels = [], []
 # Predict
+count = 0
 for batch in prediction_dataloader:
     # Add batch to GPU
     batch = tuple(t.to(device) for t in batch)
@@ -129,9 +124,16 @@ for batch in prediction_dataloader:
     label_ids = b_labels.to('cpu').numpy()
 
     # Store predictions and true labels
+<<<<<<< HEAD
     for i in range(len(logits)):
         predictions.append(logits[i])
         true_labels.append(label_ids[i])
 print('DONE.')
 
 
+=======
+    predictions.append(logits)
+    true_labels.append(label_ids)
+
+print("  Accuracy: {0:.2f}".format(flat_accuracy(predictions, true_labels)))
+>>>>>>> 055d9b5b2b770e2d51686594a90e15fe89bf910a
