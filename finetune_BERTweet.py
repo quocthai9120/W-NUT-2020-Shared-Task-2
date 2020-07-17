@@ -3,10 +3,10 @@ import time
 import random
 import datetime
 from transformers import get_linear_schedule_with_warmup
-from transformers import BertForSequenceClassification, AdamW, BertConfig
+from transformers import RobertaForSequenceClassification, AdamW, BertConfig
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data import TensorDataset, random_split
-from transformers import BertTokenizer
+from transformers import RobertaTokenizer
 import torch
 import pandas as pd
 import numpy as np
@@ -63,8 +63,8 @@ train_labels = train_labels.replace('UNINFORMATIVE', 0)
 
 # Load the BERT tokenizer.
 print('Loading BERT tokenizer...')
-tokenizer = BertTokenizer.from_pretrained(
-    'bert-base-uncased', do_lower_case=True)
+tokenizer = RobertaTokenizer.from_pretrained(
+    'roberta-base', do_lower_case=True)
 
 # Find the longest sentence in the dataset
 max_len = 0
@@ -159,8 +159,8 @@ validation_dataloader = DataLoader(
 
 # Load BertForSequenceClassification, the pretrained BERT model with a single
 # linear classification layer on top.
-model = BertForSequenceClassification.from_pretrained(
-    "bert-base-uncased",  # Use the 12-layer BERT model, with an uncased vocab.
+model = RobertaForSequenceClassification.from_pretrained(
+    "roberta-base",  # Use the 12-layer BERT model, with an uncased vocab.
     num_labels=2,  # The number of output labels--2 for binary classification.
     # You can increase this for multi-class tasks.
     output_attentions=False,  # Whether the model returns attentions weights.
@@ -238,7 +238,7 @@ total_t0 = time.time()
 
 
 # Save model weights
-model_weights = "./weights"
+model_weights = "./finetune-roberta-weights"
 
 # Create output directory if needed
 if not os.path.exists(model_weights):
@@ -441,69 +441,4 @@ print("Training complete!")
 
 print("Total training took {:} (h:mm:ss)".format(
     format_time(time.time()-total_t0)))
-
-
-#################################
-
-# Prepare data to test the model after training
-df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
-test_text_data = df_test.Text.apply(normalizeTweet)
-test_labels = df_test.Label
-test_labels = test_labels.replace('INFORMATIVE', 1)
-test_labels = test_labels.replace('UNINFORMATIVE', 0)
-
-# print(test_labels.count()) #1000
-
-import pandas as pd
-
-# Load the dataset into a pandas dataframe.
-df = pd.read_csv("./cola_public/raw/out_of_domain_dev.tsv", delimiter='\t', header=None, names=['sentence_source', 'label', 'label_notes', 'sentence'])
-
-# Report the number of sentences.
-print('Number of test sentences: {:,}\n'.format(df.shape[0]))
-
-# Create sentence and label lists
-sentences = df.sentence.values
-labels = df.label.values
-
-# Tokenize all of the sentences and map the tokens to thier word IDs.
-input_ids = []
-attention_masks = []
-
-# For every sentence...
-for sent in sentences:
-    # `encode_plus` will:
-    #   (1) Tokenize the sentence.
-    #   (2) Prepend the `[CLS]` token to the start.
-    #   (3) Append the `[SEP]` token to the end.
-    #   (4) Map tokens to their IDs.
-    #   (5) Pad or truncate the sentence to `max_length`
-    #   (6) Create attention masks for [PAD] tokens.
-    encoded_dict = tokenizer.encode_plus(
-                        sent,                      # Sentence to encode.
-                        add_special_tokens = True, # Add '[CLS]' and '[SEP]'
-                        max_length = 64,           # Pad & truncate all sentences.
-                        pad_to_max_length = True,
-                        return_attention_mask = True,   # Construct attn. masks.
-                        return_tensors = 'pt',     # Return pytorch tensors.
-                   )
-    
-    # Add the encoded sentence to the list.    
-    input_ids.append(encoded_dict['input_ids'])
-    
-    # And its attention mask (simply differentiates padding from non-padding).
-    attention_masks.append(encoded_dict['attention_mask'])
-
-# Convert the lists into tensors.
-input_ids = torch.cat(input_ids, dim=0)
-attention_masks = torch.cat(attention_masks, dim=0)
-labels = torch.tensor(labels)
-
-# Set the batch size.  
-batch_size = 32  
-
-# Create the DataLoader.
-prediction_data = TensorDataset(input_ids, attention_masks, labels)
-prediction_sampler = SequentialSampler(prediction_data)
-prediction_dataloader = DataLoader(prediction_data, sampler=prediction_sampler, batch_size=batch_size)
 

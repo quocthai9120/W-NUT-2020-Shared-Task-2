@@ -13,14 +13,12 @@ from transformers import BertForSequenceClassification, AdamW, BertConfig
 from transformers import get_linear_schedule_with_warmup
 from keras.preprocessing.sequence import pad_sequences
 
-
 from TweetNormalizer import normalizeTweet
 from BERT_embeddings import get_bert_embedding
 import os
 import pickle
 
 # Function to calculate the accuracy of our predictions vs labels
-
 
 def flat_accuracy(preds, labels):
     pred_flat = np.argmax(preds, axis=1).flatten()
@@ -131,6 +129,9 @@ for batch in prediction_dataloader:
     label_ids = b_labels.to('cpu').numpy()
 
     # Store predictions and true labels
-    predictions.append(logits)
-    true_labels.append(label_ids)
+    for i in range(len(logits)):
+        predictions.append(logits[i])
+        true_labels.append(label_ids[i])
 print('DONE.')
+
+
