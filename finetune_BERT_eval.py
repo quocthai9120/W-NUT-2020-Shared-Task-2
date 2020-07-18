@@ -17,6 +17,7 @@ from TweetNormalizer import normalizeTweet
 from BERT_embeddings import get_bert_embedding
 import os
 import pickle
+from sklearn.metrics import f1_score
 
 # Function to calculate the accuracy of our predictions vs labels
 
@@ -25,6 +26,12 @@ def flat_accuracy(preds, labels):
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
+
+
+def get_f1_score(preds, labels):
+    pred_flat = np.argmax(preds, axis=1).flatten()
+    labels_flat = labels.flatten()
+    return f1_score(pred_flat, labels_flat)
 
 
 # If there's a GPU available...
@@ -129,4 +136,7 @@ for batch in prediction_dataloader:
         predictions.append(logits[i])
         true_labels.append(label_ids[i])
 
-print("  Accuracy: {0:.2f}".format(flat_accuracy(predictions, true_labels)))
+print("  Accuracy: {0:.2f}".format(
+    flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
+print("  F1-Score: {0:.2f}".format(
+    get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
