@@ -106,16 +106,17 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
     return tuple([input_ids, attention_masks])
 
-    def save_model_weights(model: RobertaModel, file_name: str) -> None:
-        # Save model weights
-        model_weights = "./finetune-BERTweet-weights"
 
-        # Create output directory if needed
-        if not os.path.exists(model_weights):
-            os.makedirs(model_weights)
+def save_model_weights(model: RobertaModel, file_name: str) -> None:
+    # Save model weights
+    model_weights = "./finetune-BERTweet-weights"
 
-        print("Saving model to %s" % model_weights)
-        torch.save(model, model_weights + file_name)
+    # Create output directory if needed
+    if not os.path.exists(model_weights):
+        os.makedirs(model_weights)
+
+    print("Saving model to %s" % model_weights)
+    torch.save(model, model_weights + file_name)
 
 
 def main():
@@ -367,7 +368,6 @@ def main():
 
         avg_val_f1 = total_eval_f1 / len(validation_dataloader)
         print("  F1: {0:.2f}".format(avg_val_f1))
-
 
         # Calculate the average loss over all of the batches.
         avg_val_loss = total_eval_loss / len(validation_dataloader)
