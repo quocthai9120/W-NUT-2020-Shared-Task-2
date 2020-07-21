@@ -4,7 +4,7 @@ import numpy as np
 from numpy import random
 import nltk
 from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import re
 from transformers import BertTokenizer
 from torch.utils.data import TensorDataset, random_split
@@ -18,6 +18,14 @@ from BERT_embeddings import get_bert_embedding
 import os
 import pickle
 from sklearn.metrics import f1_score
+
+from typing import Tuple, List
+import argparse
+from fairseq.data.encoders.fastbpe import fastBPE
+from fairseq.data import Dictionary
+
+MAX_LENGTH = 256
+
 
 # Function to calculate the accuracy of our predictions vs labels
 
@@ -122,7 +130,7 @@ prediction_inputs: torch.tensor = torch.cat(
     input_ids_and_att_masks_tuple[0], dim=0)
 prediction_masks: torch.tensor = torch.cat(
     input_ids_and_att_masks_tuple[1], dim=0)
-prediction_labels: torch.tensor = torch.tensor(train_labels)
+prediction_labels: torch.tensor = torch.tensor(test_labels)
 
 # Create the DataLoader.
 prediction_data = TensorDataset(
@@ -154,7 +162,7 @@ for batch in prediction_dataloader:
     # speeding up prediction
     with torch.no_grad():
         # Forward pass, calculate logit predictions
-        outputs = model(b_input_ids, token_type_ids=None,
+        outputs = model(b_input_ids,
                         attention_mask=b_input_mask)
     logits = outputs[0]
     # Move logits and labels to CPU
