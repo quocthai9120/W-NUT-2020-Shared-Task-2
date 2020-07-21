@@ -108,7 +108,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     return tuple([input_ids, attention_masks])
 
 
-def save_model_weights(model: RobertaModel, file_name: str) -> None:
+def save_model_weights(model: BERTweetForBinaryClassification, file_name: str) -> None:
     # Save model weights
     model_weights = "./finetune-BERTweet-weights"
 
