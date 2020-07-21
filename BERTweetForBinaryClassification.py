@@ -16,7 +16,7 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dropout = nn.Dropout()
+        self.dropout = nn.Dropout(p=0.2)
         self.dense = nn.Linear(in_features=768,
                                out_features=64,
                                )

@@ -106,7 +106,7 @@ else:
     print('No GPU available, using the CPU instead.')
     device = torch.device("cpu")
 
-model = torch.load("finetune-BERTweet-weights/stage_1_weights.pth",
+model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
                    map_location=device)
 
 model.cuda()
