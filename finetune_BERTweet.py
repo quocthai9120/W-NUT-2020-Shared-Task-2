@@ -18,6 +18,7 @@ from fairseq.data import Dictionary
 from typing import List, Tuple
 from sklearn.metrics import f1_score
 
+
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
 
@@ -185,6 +186,7 @@ def main():
     # Tell pytorch to run this model on the GPU.
     model.cuda()
 
+    ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
                       lr=2e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
