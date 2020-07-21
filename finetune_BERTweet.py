@@ -175,7 +175,7 @@ def main():
     model = BERTweetForBinaryClassification()
 
     # Tell pytorch to run this model on the GPU.
-    # model.cuda()
+    model.cuda()
 
     optimizer = AdamW(model.parameters(),
                       lr=2e-5,  # args.learning_rate - default is 5e-5
@@ -315,6 +315,7 @@ def main():
         # Tracking variables
         total_eval_accuracy = 0
         total_eval_loss = 0
+        total_eval_f1 = 0
         nb_eval_steps = 0
 
         # Evaluate data for one epoch
@@ -358,10 +359,15 @@ def main():
             # Calculate the accuracy for this batch of test sentences, and
             # accumulate it over all batches.
             total_eval_accuracy += flat_accuracy(logits, label_ids)
+            total_eval_f1 += get_f1_score(logits, label_ids)
 
         # Report the final accuracy for this validation run.
         avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
         print("  Accuracy: {0:.2f}".format(avg_val_accuracy))
+
+        avg_val_f1 = total_eval_f1 / len(validation_dataloader)
+        print("  F1: {0:.2f}".format(avg_val_f1))
+
 
         # Calculate the average loss over all of the batches.
         avg_val_loss = total_eval_loss / len(validation_dataloader)
