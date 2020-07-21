@@ -176,6 +176,12 @@ def main():
     ######################################## Initiate Model ########################################
     model = BERTweetForBinaryClassification()
 
+    ######################################## Freeze BERTweet for stage 1 training ########################################
+    for name, param in model.named_parameters():
+        if ('classifier' not in name) or \
+                ('dense' not in name):
+            param.requires_grad = False
+
     # Tell pytorch to run this model on the GPU.
     model.cuda()
 
@@ -392,7 +398,7 @@ def main():
         )
 
         # Save weights
-        save_model_weights(model, "/weights.pth")
+        save_model_weights(model, "/stage_1_weights.pth")
 
     print("")
     print("Training complete!")
