@@ -17,6 +17,7 @@ from fairseq.data import Dictionary
 
 from typing import List, Tuple
 from sklearn.metrics import f1_score
+import os
 
 
 MAX_LENGTH: int = 256
@@ -179,9 +180,11 @@ def main():
 
     ######################################## Freeze BERTweet for stage 1 training ########################################
     for name, param in model.named_parameters():
-        if ('classifier' not in name) or \
-                ('dense' not in name):
-            param.requires_grad = False
+        param.requires_grad = False
+    model.classifier.weight.requires_grad = True
+    model.classifier.bias.requires_grad = True
+    model.dense.weight.requires_grad = True
+    model.dense.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     model.cuda()
@@ -223,7 +226,7 @@ def main():
         print('Training...')
 
         # Measure how long the training epoch takes.
-        total_t0 = time.time()
+        t0 = time.time()
 
         # Reset the total loss for this epoch.
         total_train_loss = 0
@@ -326,7 +329,6 @@ def main():
         total_eval_accuracy = 0
         total_eval_loss = 0
         total_eval_f1 = 0
-        nb_eval_steps = 0
 
         # Evaluate data for one epoch
         for batch in validation_dataloader:
@@ -406,7 +408,7 @@ def main():
     print("Training complete!")
 
     print("Total training took {:} (h:mm:ss)".format(
-        format_time(time.time()-total_t0)))
+        format_time(time.time()-t0)))
 
 
 if __name__ == "__main__":

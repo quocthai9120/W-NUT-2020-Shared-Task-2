@@ -106,10 +106,10 @@ else:
     print('No GPU available, using the CPU instead.')
     device = torch.device("cpu")
 
-model = torch.load("finetune-BERTweet-weights/weights.pth",
+model = torch.load("finetune-BERTweet-weights/stage_1_weights.pth",
                    map_location=device)
 
-# model.cuda()
+model.cuda()
 
 # Prepare data to test the model after training
 df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
