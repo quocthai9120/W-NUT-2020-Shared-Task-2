@@ -40,8 +40,9 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
         sequence_output = self.dense(sequence_output)
         logits = self.classifier(sequence_output)
         outputs = (logits,)
-        loss_function = CrossEntropyLoss()
-        loss = loss_function(
-            logits.view(-1, self.num_labels), labels.view(-1))
-        outputs = (loss,) + outputs
+        if labels is not None:
+            loss_function = CrossEntropyLoss()
+            loss = loss_function(
+                logits.view(-1, self.num_labels), labels.view(-1))
+            outputs = (loss,) + outputs
         return outputs  # loss, logits

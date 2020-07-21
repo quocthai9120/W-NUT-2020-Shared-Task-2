@@ -109,7 +109,7 @@ else:
 model = torch.load("finetune-BERTweet-weights/weights.pth",
                    map_location=device)
 
-model.cuda()
+# model.cuda()
 
 # Prepare data to test the model after training
 df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
@@ -119,7 +119,6 @@ test_labels = test_labels.replace('INFORMATIVE', 1)
 test_labels = test_labels.replace('UNINFORMATIVE', 0)
 
 batch_size = 16
-MAX_LEN = 256
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-uncased', do_lower_case=True)
 
