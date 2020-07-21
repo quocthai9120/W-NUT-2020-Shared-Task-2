@@ -16,6 +16,7 @@ from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
 from typing import List, Tuple
+from sklearn.metrics import f1_score
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
@@ -106,16 +107,16 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
     return tuple([input_ids, attention_masks])
 
-    def save_model_weights(model: RobertaModel, file_name: str) -> None:
-        # Save model weights
-        model_weights = "./finetune-BERTweet-weights"
+def save_model_weights(model: BERTweetForBinaryClassification, file_name: str) -> None:
+    # Save model weights
+    model_weights = "./finetune-BERTweet-weights"
 
-        # Create output directory if needed
-        if not os.path.exists(model_weights):
-            os.makedirs(model_weights)
+    # Create output directory if needed
+    if not os.path.exists(model_weights):
+        os.makedirs(model_weights)
 
-        print("Saving model to %s" % model_weights)
-        torch.save(model, model_weights + file_name)
+    print("Saving model to %s" % model_weights)
+    torch.save(model, model_weights + file_name)
 
 
 def main():
