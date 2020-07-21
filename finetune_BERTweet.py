@@ -223,7 +223,7 @@ def main():
         print('Training...')
 
         # Measure how long the training epoch takes.
-        t0 = time.time()
+        total_t0 = time.time()
 
         # Reset the total loss for this epoch.
         total_train_loss = 0
