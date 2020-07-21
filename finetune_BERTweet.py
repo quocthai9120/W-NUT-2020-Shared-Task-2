@@ -22,6 +22,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
+EPOCHS: int = 8
 
 
 def format_time(elapsed) -> str:
@@ -181,6 +182,7 @@ def main():
     ######################################## Freeze BERTweet for stage 1 training ########################################
     for name, param in model.named_parameters():
         param.requires_grad = False
+
     model.classifier.weight.requires_grad = True
     model.classifier.bias.requires_grad = True
     model.dense.weight.requires_grad = True
@@ -195,8 +197,7 @@ def main():
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
-    epochs: int = 5
-    total_steps: int = len(train_dataloader) * epochs
+    total_steps: int = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
     scheduler = get_linear_schedule_with_warmup(optimizer,
@@ -214,7 +215,7 @@ def main():
     training_stats: List = []
 
     # For each epoch...
-    for epoch_i in range(0, epochs):
+    for epoch_i in range(0, EPOCHS):
         # ========================================
         #               Training
         # ========================================
@@ -222,7 +223,7 @@ def main():
         # Perform one full pass over the training set.
 
         print("")
-        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, EPOCHS))
         print('Training...')
 
         # Measure how long the training epoch takes.

@@ -18,9 +18,9 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
         )
         self.dropout = nn.Dropout()
         self.dense = nn.Linear(in_features=768,
-                               out_features=768,
+                               out_features=64,
                                )
-        self.classifier = nn.Linear(in_features=768,
+        self.classifier = nn.Linear(in_features=64,
                                     out_features=self.num_labels,
                                     )
 
