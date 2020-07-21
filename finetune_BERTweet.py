@@ -16,6 +16,7 @@ from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
 from typing import List, Tuple
+from sklearn.metrics import f1_score
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
