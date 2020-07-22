@@ -173,7 +173,7 @@ for batch in prediction_dataloader:
         predictions.append(logits[i])
         true_labels.append(label_ids[i])
 
-print("  Accuracy: {0:.2f}".format(
+print("  Accuracy: {0:.4f}".format(
     flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
-print("  F1-Score: {0:.2f}".format(
+print("  F1-Score: {0:.4f}".format(
     get_f1_score(np.asarray(predictions), np.asarray(true_labels))))

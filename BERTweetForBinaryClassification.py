@@ -16,10 +16,13 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dropout = nn.Dropout(p=0.2)
         self.dense = nn.Linear(in_features=768,
                                out_features=64,
                                )
+        self.dropout = nn.Dropout(p=0.2)
+        self.dense_2 = nn.Linear(in_features=64,
+                                 out_features=64,
+                                 )
         self.classifier = nn.Linear(in_features=64,
                                     out_features=self.num_labels,
                                     )
@@ -36,8 +39,10 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
         )
         # Take <CLS> token for Native Layer Norm Backward
         sequence_output = outputs[0][:, 0, :]
-        sequence_output = self.dropout(sequence_output)
         sequence_output = self.dense(sequence_output)
+        sequence_output = self.dropout(sequence_output)
+        sequence_output = self.dense_2(sequence_output)
+        sequence_output = self.dropout(sequence_output)
         logits = self.classifier(sequence_output)
         outputs = (logits,)
         if labels is not None:

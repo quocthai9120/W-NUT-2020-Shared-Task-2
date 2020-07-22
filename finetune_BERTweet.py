@@ -119,7 +119,7 @@ def save_model_weights(model: BERTweetForBinaryClassification, file_name: str) -
     if not os.path.exists(model_weights):
         os.makedirs(model_weights)
 
-    print("Saving model to %s" % model_weights)
+    print("Saving model to %s" % (model_weights + file_name))
     torch.save(model, model_weights + file_name)
 
 
@@ -178,7 +178,7 @@ def main():
     model = BERTweetForBinaryClassification()
 
     ######################################## Freeze BERTweet for stage 1 training ########################################
-    for name, param in model.named_parameters():
+    for _, param in model.named_parameters():
         param.requires_grad = False
 
     model.classifier.weight.requires_grad = True
@@ -194,7 +194,7 @@ def main():
                       lr=10e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
-    EPOCHS: int = 2
+    EPOCHS: int = 8
     total_steps: int = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
@@ -306,7 +306,7 @@ def main():
         training_time = format_time(time.time() - t0)
 
         print("")
-        print("  Average training loss: {0:.2f}".format(avg_train_loss))
+        print("  Average training loss: {0:.4f}".format(avg_train_loss))
         print("  Training epoch took: {:}".format(training_time))
 
         # ========================================
@@ -374,10 +374,10 @@ def main():
 
         # Report the final accuracy for this validation run.
         avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
-        print("  Accuracy: {0:.2f}".format(avg_val_accuracy))
+        print("  Accuracy: {0:.4f}".format(avg_val_accuracy))
 
         avg_val_f1 = total_eval_f1 / len(validation_dataloader)
-        print("  F1: {0:.2f}".format(avg_val_f1))
+        print("  F1: {0:.4f}".format(avg_val_f1))
 
         # Calculate the average loss over all of the batches.
         avg_val_loss = total_eval_loss / len(validation_dataloader)
@@ -385,7 +385,7 @@ def main():
         # Measure how long the validation run took.
         validation_time = format_time(time.time() - t0)
 
-        print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+        print("  Validation Loss: {0:.4f}".format(avg_val_loss))
         print("  Validation took: {:}".format(validation_time))
 
         # Record all statistics from this epoch.
@@ -407,7 +407,7 @@ def main():
     #########################################################################################
 
     ######################################## Unfreeze BERTweet for stage 2 training ########################################
-    for name, param in model.named_parameters():
+    for _, param in model.named_parameters():
         param.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
@@ -419,7 +419,7 @@ def main():
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
-    EPOCHS = 4
+    EPOCHS = 6
     total_steps = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
@@ -531,7 +531,7 @@ def main():
         training_time = format_time(time.time() - t0)
 
         print("")
-        print("  Average training loss: {0:.2f}".format(avg_train_loss))
+        print("  Average training loss: {0:.4f}".format(avg_train_loss))
         print("  Training epoch took: {:}".format(training_time))
 
         # ========================================
@@ -599,10 +599,10 @@ def main():
 
         # Report the final accuracy for this validation run.
         avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
-        print("  Accuracy: {0:.2f}".format(avg_val_accuracy))
+        print("  Accuracy: {0:.4f}".format(avg_val_accuracy))
 
         avg_val_f1 = total_eval_f1 / len(validation_dataloader)
-        print("  F1: {0:.2f}".format(avg_val_f1))
+        print("  F1: {0:.4f}".format(avg_val_f1))
 
         # Calculate the average loss over all of the batches.
         avg_val_loss = total_eval_loss / len(validation_dataloader)
@@ -610,7 +610,7 @@ def main():
         # Measure how long the validation run took.
         validation_time = format_time(time.time() - t0)
 
-        print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+        print("  Validation Loss: {0:.4f}".format(avg_val_loss))
         print("  Validation took: {:}".format(validation_time))
 
         # Record all statistics from this epoch.
