@@ -17,9 +17,12 @@ from fairseq.data import Dictionary
 
 from typing import List, Tuple
 from sklearn.metrics import f1_score
+import os
+
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
+BATCH_SIZE: int = 8
 
 
 def format_time(elapsed) -> str:
@@ -116,7 +119,7 @@ def save_model_weights(model: BERTweetForBinaryClassification, file_name: str) -
     if not os.path.exists(model_weights):
         os.makedirs(model_weights)
 
-    print("Saving model to %s" % model_weights)
+    print("Saving model to %s" % (model_weights + file_name))
     torch.save(model, model_weights + file_name)
 
 
@@ -158,8 +161,6 @@ def main():
     val_size: int = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    BATCH_SIZE: int = 16
-
     train_dataloader: DataLoader = DataLoader(
         train_dataset,  # The training samples.
         sampler=RandomSampler(train_dataset),  # Select batches randomly
@@ -176,16 +177,25 @@ def main():
     ######################################## Initiate Model ########################################
     model = BERTweetForBinaryClassification()
 
+    ######################################## Freeze BERTweet for stage 1 training ########################################
+    for _, param in model.named_parameters():
+        param.requires_grad = False
+
+    model.classifier.weight.requires_grad = True
+    model.classifier.bias.requires_grad = True
+    model.dense.weight.requires_grad = True
+    model.dense.bias.requires_grad = True
+
     # Tell pytorch to run this model on the GPU.
     model.cuda()
 
+    ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=2e-5,  # args.learning_rate - default is 5e-5
+                      lr=10e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
-
-    epochs: int = 5
-    total_steps: int = len(train_dataloader) * epochs
+    EPOCHS: int = 8
+    total_steps: int = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
     scheduler = get_linear_schedule_with_warmup(optimizer,
@@ -203,7 +213,7 @@ def main():
     training_stats: List = []
 
     # For each epoch...
-    for epoch_i in range(0, epochs):
+    for epoch_i in range(0, EPOCHS):
         # ========================================
         #               Training
         # ========================================
@@ -211,7 +221,7 @@ def main():
         # Perform one full pass over the training set.
 
         print("")
-        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, EPOCHS))
         print('Training...')
 
         # Measure how long the training epoch takes.
@@ -296,8 +306,8 @@ def main():
         training_time = format_time(time.time() - t0)
 
         print("")
-        print("  Average training loss: {0:.2f}".format(avg_train_loss))
-        print("  Training epcoh took: {:}".format(training_time))
+        print("  Average training loss: {0:.4f}".format(avg_train_loss))
+        print("  Training epoch took: {:}".format(training_time))
 
         # ========================================
         #               Validation
@@ -318,7 +328,6 @@ def main():
         total_eval_accuracy = 0
         total_eval_loss = 0
         total_eval_f1 = 0
-        nb_eval_steps = 0
 
         # Evaluate data for one epoch
         for batch in validation_dataloader:
@@ -365,10 +374,10 @@ def main():
 
         # Report the final accuracy for this validation run.
         avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
-        print("  Accuracy: {0:.2f}".format(avg_val_accuracy))
+        print("  Accuracy: {0:.4f}".format(avg_val_accuracy))
 
         avg_val_f1 = total_eval_f1 / len(validation_dataloader)
-        print("  F1: {0:.2f}".format(avg_val_f1))
+        print("  F1: {0:.4f}".format(avg_val_f1))
 
         # Calculate the average loss over all of the batches.
         avg_val_loss = total_eval_loss / len(validation_dataloader)
@@ -376,7 +385,7 @@ def main():
         # Measure how long the validation run took.
         validation_time = format_time(time.time() - t0)
 
-        print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+        print("  Validation Loss: {0:.4f}".format(avg_val_loss))
         print("  Validation took: {:}".format(validation_time))
 
         # Record all statistics from this epoch.
@@ -392,13 +401,238 @@ def main():
         )
 
         # Save weights
-        save_model_weights(model, "/weights.pth")
+        save_model_weights(model, "/stage_1_weights.pth")
+    #########################################################################################
+    ######################################## STAGE 2 ########################################
+    #########################################################################################
+
+    ######################################## Unfreeze BERTweet for stage 2 training ########################################
+    for _, param in model.named_parameters():
+        param.requires_grad = True
+
+    # Tell pytorch to run this model on the GPU.
+    model.cuda()
+
+    ######################################## Setup Optimizer ########################################
+    optimizer = AdamW(model.parameters(),
+                      lr=2e-5,  # args.learning_rate - default is 5e-5
+                      eps=1e-8  # args.adam_epsilon  - default is 1e-8.
+                      )
+
+    EPOCHS = 6
+    total_steps = len(train_dataloader) * EPOCHS
+
+    # Create the learning rate scheduler.
+    scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                num_warmup_steps=0,  # Default value in run_glue.py
+                                                num_training_steps=total_steps)
+
+    ######################################## Training ########################################
+    random.seed(SEED_VAL)
+    np.random.seed(SEED_VAL)
+    torch.manual_seed(SEED_VAL)
+    torch.cuda.manual_seed_all(SEED_VAL)
+
+    # We'll store a number of quantities such as training and validation loss,
+    # validation accuracy, and timings.
+    training_stats: List = []
+
+    # For each epoch...
+    for epoch_i in range(0, EPOCHS):
+        # ========================================
+        #               Training
+        # ========================================
+
+        # Perform one full pass over the training set.
+
+        print("")
+        print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, EPOCHS))
+        print('Training...')
+
+        # Measure how long the training epoch takes.
+        t0 = time.time()
+
+        # Reset the total loss for this epoch.
+        total_train_loss = 0
+
+        # Put the model into training mode. Don't be mislead--the call to
+        # `train` just changes the *mode*, it doesn't *perform* the training.
+        # `dropout` and `batchnorm` layers behave differently during training
+        # vs. test (source: https://stackoverflow.com/questions/51433378/what-does-model-train-do-in-pytorch)
+        model.train()
+
+        # For each batch of training data...
+        for step, batch in enumerate(train_dataloader):
+
+            # Progress update every 40 batches.
+            if step % 40 == 0 and not step == 0:
+                # Calculate elapsed time in minutes.
+                elapsed = format_time(time.time() - t0)
+
+                # Report progress.
+                print('  Batch {:>5,}  of  {:>5,}.    Elapsed: {:}.'.format(
+                    step, len(train_dataloader), elapsed))
+
+            # Unpack this training batch from our dataloader.
+            #
+            # As we unpack the batch, we'll also copy each tensor to the GPU using the
+            # `to` method.
+            #
+            # `batch` contains three pytorch tensors:
+            #   [0]: input ids
+            #   [1]: attention masks
+            #   [2]: labels
+            b_input_ids = batch[0].to(device)
+            b_input_mask = batch[1].to(device)
+            b_labels = batch[2].to(device)
+
+            # Always clear any previously calculated gradients before performing a
+            # backward pass. PyTorch doesn't do this automatically because
+            # accumulating the gradients is "convenient while training RNNs".
+            # (source: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch)
+            model.zero_grad()
+
+            # Perform a forward pass (evaluate the model on this training batch).
+            # The documentation for this `model` function is here:
+            # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
+            # It returns different numbers of parameters depending on what arguments
+            # arge given and what flags are set. For our useage here, it returns
+            # the loss (because we provided labels) and the "logits"--the model
+            # outputs prior to activation.
+            loss, logits = model(b_input_ids,
+                                 attention_mask=b_input_mask,
+                                 labels=b_labels)
+
+            # Accumulate the training loss over all of the batches so that we can
+            # calculate the average loss at the end. `loss` is a Tensor containing a
+            # single value; the `.item()` function just returns the Python value
+            # from the tensor.
+            total_train_loss += loss.item()
+
+            # Perform a backward pass to calculate the gradients.
+            loss.backward()
+
+            # Clip the norm of the gradients to 1.0.
+            # This is to help prevent the "exploding gradients" problem.
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+            # Update parameters and take a step using the computed gradient.
+            # The optimizer dictates the "update rule"--how the parameters are
+            # modified based on their gradients, the learning rate, etc.
+            optimizer.step()
+
+            # Update the learning rate.
+            scheduler.step()
+
+        # Calculate the average loss over all of the batches.
+        avg_train_loss = total_train_loss / len(train_dataloader)
+
+        # Measure how long this epoch took.
+        training_time = format_time(time.time() - t0)
+
+        print("")
+        print("  Average training loss: {0:.4f}".format(avg_train_loss))
+        print("  Training epoch took: {:}".format(training_time))
+
+        # ========================================
+        #               Validation
+        # ========================================
+        # After the completion of each training epoch, measure our performance on
+        # our validation set.
+
+        print("")
+        print("Running Validation...")
+
+        t0 = time.time()
+
+        # Put the model in evaluation mode--the dropout layers behave differently
+        # during evaluation.
+        model.eval()
+
+        # Tracking variables
+        total_eval_accuracy = 0
+        total_eval_loss = 0
+        total_eval_f1 = 0
+
+        # Evaluate data for one epoch
+        for batch in validation_dataloader:
+
+            # Unpack this training batch from our dataloader.
+            #
+            # As we unpack the batch, we'll also copy each tensor to the GPU using
+            # the `to` method.
+            #
+            # `batch` contains three pytorch tensors:
+            #   [0]: input ids
+            #   [1]: attention masks
+            #   [2]: labels
+            b_input_ids = batch[0].to(device)
+            b_input_mask = batch[1].to(device)
+            b_labels = batch[2].to(device)
+
+            # Tell pytorch not to bother with constructing the compute graph during
+            # the forward pass, since this is only needed for backprop (training).
+            with torch.no_grad():
+
+                # Forward pass, calculate logit predictions.
+                # token_type_ids is the same as the "segment ids", which
+                # differentiates sentence 1 and 2 in 2-sentence tasks.
+                # The documentation for this `model` function is here:
+                # https://huggingface.co/transformers/v2.2.0/model_doc/bert.html#transformers.BertForSequenceClassification
+                # Get the "logits" output by the model. The "logits" are the output
+                # values prior to applying an activation function like the softmax.
+                (loss, logits) = model(b_input_ids,
+                                       attention_mask=b_input_mask,
+                                       labels=b_labels)
+
+            # Accumulate the validation loss.
+            total_eval_loss += loss.item()
+
+            # Move logits and labels to CPU
+            logits = logits.detach().cpu().numpy()
+            label_ids = b_labels.to('cpu').numpy()
+
+            # Calculate the accuracy for this batch of test sentences, and
+            # accumulate it over all batches.
+            total_eval_accuracy += flat_accuracy(logits, label_ids)
+            total_eval_f1 += get_f1_score(logits, label_ids)
+
+        # Report the final accuracy for this validation run.
+        avg_val_accuracy = total_eval_accuracy / len(validation_dataloader)
+        print("  Accuracy: {0:.4f}".format(avg_val_accuracy))
+
+        avg_val_f1 = total_eval_f1 / len(validation_dataloader)
+        print("  F1: {0:.4f}".format(avg_val_f1))
+
+        # Calculate the average loss over all of the batches.
+        avg_val_loss = total_eval_loss / len(validation_dataloader)
+
+        # Measure how long the validation run took.
+        validation_time = format_time(time.time() - t0)
+
+        print("  Validation Loss: {0:.4f}".format(avg_val_loss))
+        print("  Validation took: {:}".format(validation_time))
+
+        # Record all statistics from this epoch.
+        training_stats.append(
+            {
+                'epoch': epoch_i + 1,
+                'Training Loss': avg_train_loss,
+                'Valid. Loss': avg_val_loss,
+                'Valid. Accur.': avg_val_accuracy,
+                'Training Time': training_time,
+                'Validation Time': validation_time
+            }
+        )
+
+        # Save weights
+        save_model_weights(model, "/stage_2_weights.pth")
 
     print("")
     print("Training complete!")
 
     print("Total training took {:} (h:mm:ss)".format(
-        format_time(time.time()-total_t0)))
+        format_time(time.time()-t0)))
 
 
 if __name__ == "__main__":

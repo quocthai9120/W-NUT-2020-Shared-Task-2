@@ -17,12 +17,23 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
+<<<<<<< HEAD
 
         # self.classifier = model
 
         self.resnet = models.resnet18(pretrained=True)
         num_final_in = self.resnet.fc.in_features
         self.classifier = nn.Linear(in_features=num_final_in,
+=======
+        self.dense = nn.Linear(in_features=768,
+                               out_features=64,
+                               )
+        self.dropout = nn.Dropout(p=0.2)
+        self.dense_2 = nn.Linear(in_features=64,
+                                 out_features=64,
+                                 )
+        self.classifier = nn.Linear(in_features=64,
+>>>>>>> de55464ffe68e9d5ed43f624eefef2ed53dc2721
                                     out_features=self.num_labels,
                                     )
 
@@ -52,11 +63,19 @@ for child in model.children():
 
         # Take <CLS> token for Native Layer Norm Backward
         sequence_output = outputs[0][:, 0, :]
+<<<<<<< HEAD
         sequence_output = self.resnet(sequence_output)
+=======
+        sequence_output = self.dense(sequence_output)
+        sequence_output = self.dropout(sequence_output)
+        sequence_output = self.dense_2(sequence_output)
+        sequence_output = self.dropout(sequence_output)
+>>>>>>> de55464ffe68e9d5ed43f624eefef2ed53dc2721
         logits = self.classifier(sequence_output)
         outputs = (logits,)
-        loss_function = CrossEntropyLoss()
-        loss = loss_function(
-            logits.view(-1, self.num_labels), labels.view(-1))
-        outputs = (loss,) + outputs
+        if labels is not None:
+            loss_function = CrossEntropyLoss()
+            loss = loss_function(
+                logits.view(-1, self.num_labels), labels.view(-1))
+            outputs = (loss,) + outputs
         return outputs  # loss, logits

@@ -106,7 +106,7 @@ else:
     print('No GPU available, using the CPU instead.')
     device = torch.device("cpu")
 
-model = torch.load("finetune-BERTweet-weights/weights.pth",
+model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
                    map_location=device)
 
 model.cuda()
@@ -119,7 +119,6 @@ test_labels = test_labels.replace('INFORMATIVE', 1)
 test_labels = test_labels.replace('UNINFORMATIVE', 0)
 
 batch_size = 16
-MAX_LEN = 256
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-uncased', do_lower_case=True)
 
@@ -174,7 +173,7 @@ for batch in prediction_dataloader:
         predictions.append(logits[i])
         true_labels.append(label_ids[i])
 
-print("  Accuracy: {0:.2f}".format(
+print("  Accuracy: {0:.4f}".format(
     flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
-print("  F1-Score: {0:.2f}".format(
+print("  F1-Score: {0:.4f}".format(
     get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
