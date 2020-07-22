@@ -1,6 +1,7 @@
 from transformers import RobertaConfig, RobertaModel, BertPreTrainedModel
 from torch.nn import CrossEntropyLoss
 from torch import nn
+from torchvision import models
 
 
 class BERTweetForBinaryClassification(BertPreTrainedModel):
@@ -16,14 +17,28 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dropout = nn.Dropout()
-        self.dense = nn.Linear(in_features=768,
-                               out_features=64,
-                               )
-        self.classifier = nn.Linear(in_features=64,
+
+        # self.classifier = model
+
+        self.resnet = models.resnet18(pretrained=True)
+        num_final_in = self.resnet.fc.in_features
+        self.classifier = nn.Linear(in_features=num_final_in,
                                     out_features=self.num_labels,
                                     )
 
+# model = models.resnet18(pretrained = True)
+num_final_in = model.fc.in_features
+NUM_CLASSES = 1
+model.fc = nn.Linear(num_final_in, NUM_CLASSES)
+
+# Code for freezing different layers
+ct = 0
+for child in model.children():
+    ct += 1
+    if ct < 4:
+        for param in child.parameters():
+            param.require_grad = False
+            
     def forward(
         self,
         input_ids=None,
@@ -34,10 +49,10 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             input_ids,
             attention_mask=attention_mask,
         )
+
         # Take <CLS> token for Native Layer Norm Backward
         sequence_output = outputs[0][:, 0, :]
-        sequence_output = self.dropout(sequence_output)
-        sequence_output = self.dense(sequence_output)
+        sequence_output = self.resnet(sequence_output)
         logits = self.classifier(sequence_output)
         outputs = (logits,)
         loss_function = CrossEntropyLoss()
