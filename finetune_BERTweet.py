@@ -22,7 +22,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 8
+BATCH_SIZE: int = 16
 
 
 def format_time(elapsed) -> str:
@@ -181,10 +181,8 @@ def main():
     for _, param in model.named_parameters():
         param.requires_grad = False
 
-    model.classifier.weight.requires_grad = True
-    model.classifier.bias.requires_grad = True
-    model.dense.weight.requires_grad = True
-    model.dense.bias.requires_grad = True
+    for _, param in model.resnet.named_parameters():
+        param.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     model.cuda()
@@ -194,7 +192,7 @@ def main():
                       lr=10e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
-    EPOCHS: int = 8
+    EPOCHS: int = 15
     total_steps: int = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
@@ -419,7 +417,7 @@ def main():
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
-    EPOCHS = 6
+    EPOCHS = 4
     total_steps = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.

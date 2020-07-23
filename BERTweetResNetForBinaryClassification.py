@@ -2,6 +2,10 @@ from transformers import RobertaConfig, RobertaModel, BertPreTrainedModel
 from torch.nn import CrossEntropyLoss
 from torch import nn
 from torchvision import models
+import torch
+
+
+device: torch.device = torch.device("cuda")
 
 
 class BERTweetForBinaryClassification(BertPreTrainedModel):
@@ -17,16 +21,11 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=768,
-                               out_features=64,
-                               )
-        self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=64,
-                                 out_features=64,
-                                 )
-        self.classifier = nn.Linear(in_features=64,
-                                    out_features=self.num_labels,
-                                    )
+        self.resnet = models.resnet18(pretrained=True)
+        num_final_in = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(in_features=num_final_in,
+                                   out_features=self.num_labels,
+                                   )
 
     def forward(
         self,
@@ -41,12 +40,18 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
         # Take <CLS> token for Native Layer Norm Backward
         sequence_output: torch.tensor = outputs[0][:, 0, :]
 
-        sequence_output = self.dense(sequence_output)
-        sequence_output = self.dropout(sequence_output)
-        sequence_output = self.dense_2(sequence_output)
-        sequence_output = self.dropout(sequence_output)
+        batch_size = sequence_output.size()[0]
+        vector_length = sequence_output.size()[1]
+        sequence_output = torch.reshape(
+            sequence_output, (batch_size, 1, vector_length, 1))
 
-        logits: torch.tensor = self.classifier(sequence_output)
+        zeros: torch.tensor = torch.zeros(
+            (batch_size, 1, vector_length, 1)).to(device)
+
+        sequence_output = torch.cat(
+            [torch.cat([sequence_output, zeros], dim=1), zeros], dim=1)
+
+        logits: torch.tensor = self.resnet(sequence_output)
         outputs = (logits,)
         if labels is not None:
             loss_function = CrossEntropyLoss()
