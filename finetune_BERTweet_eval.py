@@ -11,7 +11,6 @@ from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from transformers import BertForSequenceClassification, AdamW, BertConfig
 from transformers import get_linear_schedule_with_warmup
-from keras.preprocessing.sequence import pad_sequences
 
 from TweetNormalizer import normalizeTweet
 from BERT_embeddings import get_bert_embedding

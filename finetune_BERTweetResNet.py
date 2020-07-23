@@ -10,7 +10,7 @@ import time
 
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+from BERTweetResNetForBinaryClassification import BERTweetResNetForBinaryClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -22,7 +22,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 16
+BATCH_SIZE: int = 8
 
 
 def format_time(elapsed) -> str:
@@ -128,14 +128,10 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device):
     for _, param in model.named_parameters():
         param.requires_grad = False
 
-    model.classifier.weight.requires_grad = True
-    model.classifier.bias.requires_grad = True
-    model.dense.weight.requires_grad = True
-    model.dense.bias.requires_grad = True
-    model.dense_2.weight.requires_grad = True
-    model.dense_2.bias.requires_grad = True
+    for _, param in model.resnet.named_parameters():
+        param.requires_grad = True
 
-    # Tell pytorch to run this model on the GPU.
+        # Tell pytorch to run this model on the GPU.
     model.cuda()
 
     ######################################## Setup Optimizer ########################################
@@ -367,7 +363,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device):
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
-    EPOCHS = 4
+    EPOCHS = 6
     total_steps = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
@@ -635,7 +631,7 @@ def main():
     )
 
     ######################################## Initiate Model ########################################
-    model = BERTweetForBinaryClassification()
+    model = BERTweetResNetForBinaryClassification()
     stage_1_training(model, train_dataloader, validation_dataloader, device)
     stage_2_training(model, train_dataloader, validation_dataloader, device)
 

@@ -18,10 +18,10 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             config=config
         )
         self.dense = nn.Linear(in_features=768,
-                               out_features=64,
+                               out_features=128,
                                )
         self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=64,
+        self.dense_2 = nn.Linear(in_features=128,
                                  out_features=64,
                                  )
         self.classifier = nn.Linear(in_features=64,

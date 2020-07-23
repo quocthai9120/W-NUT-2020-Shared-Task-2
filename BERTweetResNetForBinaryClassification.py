@@ -8,7 +8,7 @@ import torch
 device: torch.device = torch.device("cuda")
 
 
-class BERTweetForBinaryClassification(BertPreTrainedModel):
+class BERTweetResNetForBinaryClassification(BertPreTrainedModel):
     base_model_prefix = "roberta"
 
     def __init__(self):
