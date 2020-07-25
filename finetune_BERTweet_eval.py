@@ -6,7 +6,6 @@ import nltk
 from sklearn.metrics import accuracy_score, confusion_matrix
 #import matplotlib.pyplot as plt
 import re
-from transformers import BertTokenizer
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from transformers import BertForSequenceClassification, AdamW, BertConfig
@@ -22,6 +21,8 @@ from typing import Tuple, List
 import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
+
+from torch import nn.Softmax
 
 MAX_LENGTH = 256
 
@@ -108,7 +109,7 @@ else:
 model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
                    map_location=device)
 
-model.cuda()
+# model.cuda()
 
 # Prepare data to test the model after training
 df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
@@ -118,8 +119,6 @@ test_labels = test_labels.replace('INFORMATIVE', 1)
 test_labels = test_labels.replace('UNINFORMATIVE', 0)
 
 batch_size = 16
-tokenizer = BertTokenizer.from_pretrained(
-    'bert-base-uncased', do_lower_case=True)
 
 input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
     test_text_data)
@@ -146,7 +145,7 @@ print('Predicting labels for {:,} test sentences...'.format(
 # Put model in evaluation mode
 model.eval()
 # Tracking variables
-predictions, true_labels = [], []
+predictions, softmax_outputs, true_labels = [], [], []
 # Predict
 count = 0
 for batch in prediction_dataloader:
@@ -167,9 +166,13 @@ for batch in prediction_dataloader:
     logits = logits.detach().cpu().numpy()
     label_ids = b_labels.to('cpu').numpy()
 
-    # Store predictions and true labels
+    softmax: nn.Softmax = nn.Softmax()
+    curr_softmax_outputs: torch.tensor = softmax(torch.tensor(logits))
+
+    # Store predictions, softmax vectors, and true labels
     for i in range(len(logits)):
         predictions.append(logits[i])
+        softmax_outputs.append(curr_softmax_outputs[i])
         true_labels.append(label_ids[i])
 
 print("  Accuracy: {0:.4f}".format(

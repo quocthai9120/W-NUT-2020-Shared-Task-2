@@ -1,7 +1,6 @@
 from transformers import RobertaConfig, RobertaModel, BertPreTrainedModel
 from torch.nn import CrossEntropyLoss
 from torch import nn
-from torchvision import models
 
 
 class BERTweetForBinaryClassification(BertPreTrainedModel):

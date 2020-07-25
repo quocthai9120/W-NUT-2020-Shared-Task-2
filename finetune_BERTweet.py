@@ -22,7 +22,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 16
+BATCH_SIZE: int = 8
 
 
 def format_time(elapsed) -> str:
@@ -123,7 +123,7 @@ def save_model_weights(model, file_name: str) -> None:
     torch.save(model, model_weights + file_name)
 
 
-def stage_1_training(model, train_dataloader, validation_dataloader, device):
+def stage_1_training(model, train_dataloader, validation_dataloader, device, EPOCHS):
     ######################################## Freeze BERTweet for stage 1 training ########################################
     for _, param in model.named_parameters():
         param.requires_grad = False
@@ -136,14 +136,15 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device):
     model.dense_2.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
-    model.cuda()
+    if device == torch.device("cuda"):
+        model.cuda()
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
                       lr=10e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
-    EPOCHS: int = 15
+    EPOCHS: int = EPOCHS
     total_steps: int = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
@@ -353,7 +354,7 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device):
         save_model_weights(model, "/stage_1_weights.pth")
 
 
-def stage_2_training(model, train_dataloader, validation_dataloader, device):
+def stage_2_training(model, train_dataloader, validation_dataloader, device, EPOCHS):
     ######################################## Unfreeze BERTweet for stage 2 training ########################################
     for _, param in model.named_parameters():
         param.requires_grad = True
@@ -367,7 +368,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device):
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
-    EPOCHS = 4
+    EPOCHS = EPOCHS
     total_steps = len(train_dataloader) * EPOCHS
 
     # Create the learning rate scheduler.
@@ -636,8 +637,12 @@ def main():
 
     ######################################## Initiate Model ########################################
     model = BERTweetForBinaryClassification()
-    stage_1_training(model, train_dataloader, validation_dataloader, device)
-    stage_2_training(model, train_dataloader, validation_dataloader, device)
+    stage_1_training(model, train_dataloader,
+                     validation_dataloader, device, EPOCHS=15)
+    # model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
+    #                    map_location=device)
+    stage_2_training(model, train_dataloader,
+                     validation_dataloader, device, EPOCHS=3)
 
 
 if __name__ == "__main__":
