@@ -98,7 +98,7 @@ def main() -> None:
     # Load and initialize model
     model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
                        map_location=device)
-    # model.cuda()
+    model.cuda()
 
     ######################################## Prepare Data ########################################
     # Prepare train data
@@ -154,14 +154,14 @@ def main() -> None:
     # Put model in evaluation mode
     model.eval()
     # Tracking variables
-    predictions, softmax_outputs, true_labels = [], [], []
+    softmax_outputs: List = []
     print('Getting softmax vectors')
     for batch in train_dataloader:
         # Add batch to GPU
         batch = tuple(t.to(device) for t in batch)
 
         # Unpack the inputs from our dataloader
-        b_input_ids, b_input_mask, b_labels = batch
+        b_input_ids, b_input_mask, _ = batch
 
         # Telling the model not to compute or store gradients, saving memory and
         # speeding up prediction
