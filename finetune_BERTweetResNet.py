@@ -131,7 +131,7 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device):
     for _, param in model.resnet.named_parameters():
         param.requires_grad = True
 
-        # Tell pytorch to run this model on the GPU.
+    # Tell pytorch to run this model on the GPU.
     model.cuda()
 
     ######################################## Setup Optimizer ########################################

@@ -1,17 +1,11 @@
 # NOTE: valid.tsv has been renamed to test.tsv. You still need to think about how to "test" the data
-import logging
+import sys
 import pandas as pd
 import numpy as np
-from numpy import random
-import gensim
-import nltk
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
-from nltk.corpus import stopwords
 import re
-from bs4 import BeautifulSoup
+sys.path.append("/home/vina/W-NUT-2020-Shared-Task-2/")
 from TweetNormalizer import normalizeTweet
 #%matplotlib inline
 
@@ -21,7 +15,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
 
 # Read data in
-df = pd.read_csv('/home/vina/Desktop/W-NUT/train.tsv', sep='\t')
+df = pd.read_csv('data/train.csv')
 df = df[pd.notnull(df['Label'])]
 
 # Count number of instances to read data in
@@ -41,7 +35,7 @@ X_train = df.Text
 y_train = df.Label
 
 # Prepare data to test the model after training
-df_test = pd.read_csv('/home/vina/Desktop/W-NUT/test.tsv', sep='\t')
+df_test = pd.read_csv('data/test.csv')
 X_test = df_test.Text.apply(normalizeTweet)
 y_test = df_test.Label
 

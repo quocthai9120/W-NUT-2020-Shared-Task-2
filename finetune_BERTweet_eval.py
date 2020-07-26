@@ -22,7 +22,6 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
-from torch import nn.Softmax
 
 MAX_LENGTH = 256
 
@@ -166,7 +165,7 @@ for batch in prediction_dataloader:
     logits = logits.detach().cpu().numpy()
     label_ids = b_labels.to('cpu').numpy()
 
-    softmax: nn.Softmax = nn.Softmax()
+    softmax: torch.nn.Softmax = torch.nn.Softmax()
     curr_softmax_outputs: torch.tensor = softmax(torch.tensor(logits))
 
     # Store predictions, softmax vectors, and true labels
