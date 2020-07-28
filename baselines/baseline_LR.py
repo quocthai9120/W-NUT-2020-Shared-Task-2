@@ -7,12 +7,13 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 import re
 sys.path.append("/home/vina/W-NUT-2020-Shared-Task-2/")
 from TweetNormalizer import normalizeTweet
-#%matplotlib inline
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
+import torch
+
 
 # Read data in
 df = pd.read_csv('data/train.csv')
@@ -43,14 +44,24 @@ y_test = df_test.Label
 # Vectorizer => Transformer => Classifier
 logreg = Pipeline([('vect', CountVectorizer()),
                 ('tfidf', TfidfTransformer()),
-                ('clf', LogisticRegression(n_jobs=1, C=1e5)),
+                ('clf', LogisticRegression(n_jobs=1, C=1e5, max_iter=1000)),
                ])
 
 logreg.fit(X_train, y_train)
 
-y_pred = logreg.predict(X_test)
+y_pred = logreg.predict_proba(X_test)
 
-my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
+list_ypred = []
 
-print('accuracy %s' % accuracy_score(y_pred, y_test))
-print(classification_report(y_test, y_pred,target_names=my_tags))
+for i in y_pred:
+    tensor_i = torch.from_numpy(i)
+    list_ypred.append(tensor_i)
+
+print(list_ypred)
+
+torch.save(list_ypred, "softmax/lr_softmax/test_softmax.pt")
+
+#my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
+
+#print('accuracy %s' % accuracy_score(y_pred, y_test))
+#print(classification_report(y_test, y_pred, target_names=my_tags))
