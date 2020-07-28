@@ -16,6 +16,7 @@ from BERT_embeddings import get_bert_embedding
 import os
 import pickle
 from sklearn.metrics import f1_score
+from sklearn.metrics import classification_report
 
 from typing import Tuple, List
 import argparse
@@ -35,10 +36,16 @@ def flat_accuracy(preds, labels):
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
 
+def get_classification_report(labels, preds):
+    pred_flat = np.argmax(preds, axis=1).flatten()
+    labels_flat = labels.flatten()
+    return classification_report(labels_flat, pred_flat)
+
+
 def get_f1_score(preds, labels):
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
-    return f1_score(pred_flat, labels_flat)
+    return f1_score(labels_flat, pred_flat)
 
 
 def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, List]:
@@ -178,3 +185,5 @@ print("  Accuracy: {0:.4f}".format(
     flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
 print("  F1-Score: {0:.4f}".format(
     get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
+print("Report")
+print(get_classification_report(np.asarray(true_labels), np.asarray(predictions)))
