@@ -181,6 +181,9 @@ for batch in prediction_dataloader:
         softmax_outputs.append(curr_softmax_outputs[i])
         true_labels.append(label_ids[i])
 
+
+torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
+
 print("  Accuracy: {0:.4f}".format(
     flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
 print("  F1-Score: {0:.4f}".format(

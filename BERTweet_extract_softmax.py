@@ -102,40 +102,51 @@ def main() -> None:
 
     ######################################## Prepare Data ########################################
     # Prepare train data
-    print('Preparing training data')
-    df_train: pd.DataFrame = pd.read_csv('./train.tsv', sep='\t',
-                                         lineterminator='\n', header=0)
+    df_train: pd.DataFrame = pd.read_csv('./data/train.csv')
+    df_valid: pd.DataFrame = pd.read_csv('./data/valid.csv')
 
     # Normalizing the tweets
     df_train['Text'] = df_train['Text'].apply(normalizeTweet)
+    df_valid['Text'] = df_valid['Text'].apply(normalizeTweet)
 
     # Prepare data to train the model
     train_text_data: pd.core.series.Series = df_train.Text
     train_labels: pd.core.series.Series = df_train.Label.replace(
         {'INFORMATIVE': 1, 'UNINFORMATIVE': 0})
 
-    print("train_text_data: {}, train_labels: {}".format(
-        train_text_data.count(), train_labels.count()))  # 7000, 7000
+    valid_text_data: pd.core.series.Series = df_valid.Text
+    valid_labels: pd.core.series.Series = df_valid.Label.replace(
+        {'INFORMATIVE': 1, 'UNINFORMATIVE': 0})
+
+    # print("train_text_data: {}, train_labels: {}".format(
+    #    train_text_data.count(), train_labels.count()))  # 7000, 7000
 
     ######################################## Tokenization & Input Formatting ########################################
-    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+    train_input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
         train_text_data)
 
-    input_ids: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[0], dim=0)
-    attention_masks: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[1], dim=0)
+    train_input_ids: torch.tensor = torch.cat(
+        train_input_ids_and_att_masks_tuple[0], dim=0)
+    train_attention_masks: torch.tensor = torch.cat(
+        train_input_ids_and_att_masks_tuple[1], dim=0)
     train_labels: torch.tensor = torch.tensor(train_labels)
+
+    valid_input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+        valid_text_data)
+
+    valid_input_ids: torch.tensor = torch.cat(
+        valid_input_ids_and_att_masks_tuple[0], dim=0)
+    valid_attention_masks: torch.tensor = torch.cat(
+        valid_input_ids_and_att_masks_tuple[1], dim=0)
+    valid_labels: torch.tensor = torch.tensor(valid_labels)
 
     ######################################## Split training and feed to dataloader ########################################
     # Combine the training inputs into a TensorDataset.
-    print('Splitting dataset and feed to dataloader')
-    dataset: TensorDataset = TensorDataset(
-        input_ids, attention_masks, train_labels)
+    train_dataset: TensorDataset = TensorDataset(
+        train_input_ids, train_attention_masks, train_labels)
 
-    train_size: int = int(0.9 * len(dataset))
-    val_size: int = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    valid_dataset: TensorDataset = TensorDataset(
+        valid_input_ids, valid_attention_masks, valid_labels)
 
     train_dataloader: DataLoader = DataLoader(
         train_dataset,  # The training samples.
@@ -144,17 +155,17 @@ def main() -> None:
     )
 
     validation_dataloader: DataLoader = DataLoader(
-        val_dataset,  # The validation samples.
+        valid_dataset,  # The validation samples.
         # Pull out batches sequentially.
-        sampler=SequentialSampler(val_dataset),
+        sampler=SequentialSampler(valid_dataset),
         batch_size=BATCH_SIZE  # Evaluate with this batch size.
     )
 
-    ################# get softmax vector #################
+    ################# get softmax vector for train_dataloader #################
     # Put model in evaluation mode
     model.eval()
     # Tracking variables
-    softmax_outputs: List = []
+    train_softmax_outputs: List = []
     print('Getting softmax vectors')
     for batch in train_dataloader:
         # Add batch to GPU
@@ -178,7 +189,48 @@ def main() -> None:
 
         # Store predictions, softmax vectors, and true labels
         for i in range(len(logits)):
-            softmax_outputs.append(curr_softmax_outputs[i])
+            train_softmax_outputs.append(curr_softmax_outputs[i])
+
+    ################# get softmax vector for valid_dataloader #################
+    # Tracking variables
+    valid_softmax_outputs: List = []
+    print('Getting softmax vectors')
+    for batch in validation_dataloader:
+        # Add batch to GPU
+        batch = tuple(t.to(device) for t in batch)
+
+        # Unpack the inputs from our dataloader
+        b_input_ids, b_input_mask, _ = batch
+
+        # Telling the model not to compute or store gradients, saving memory and
+        # speeding up prediction
+        with torch.no_grad():
+            # Forward pass, calculate logit predictions
+            outputs = model(b_input_ids,
+                            attention_mask=b_input_mask)
+        logits = outputs[0]
+        # Move logits and labels to CPU
+        logits = logits.detach().cpu().numpy()
+
+        softmax: nn.Softmax = nn.Softmax()
+        curr_softmax_outputs: torch.tensor = softmax(torch.tensor(logits))
+
+        # Store predictions, softmax vectors, and true labels
+        for i in range(len(logits)):
+            valid_softmax_outputs.append(curr_softmax_outputs[i])
+
+        torch.save(train_softmax_outputs,
+                   "./softmax/BERTweet_softmax/train_softmax.pt")
+        torch.save(valid_softmax_outputs,
+                   "./softmax/BERTweet_softmax/valid_softmax.pt")
+        train_softmax_outputs = torch.load(
+            ".softmax/BERTweet_softmax/train_softmax.pt")
+        valid_softmax_outputs = torch.load(
+            ".softmax/BERTweet_softmax/valid_softmax.pt")
+        print("Train:")
+        print(train_softmax_outputs)
+        print("Valid:")
+        print(valid_softmax_outputs)
 
 
 if __name__ == "__main__":

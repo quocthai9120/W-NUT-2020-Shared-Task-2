@@ -22,7 +22,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 8
+BATCH_SIZE: int = 16
 
 
 def format_time(elapsed) -> str:
@@ -45,7 +45,7 @@ def flat_accuracy(preds, labels) -> np.long:
 def get_f1_score(preds, labels) -> np.long:
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
-    return f1_score(pred_flat, labels_flat)
+    return f1_score(labels_flat, pred_flat)
 
 
 def setup_device() -> torch.device:
@@ -120,7 +120,7 @@ def save_model_weights(model, file_name: str) -> None:
         os.makedirs(model_weights)
 
     print("Saving model to %s" % (model_weights + file_name))
-    torch.save(model, model_weights + file_name)
+    torch.save(model.state_dict(), model_weights + file_name)
 
 
 def stage_1_training(model, train_dataloader, validation_dataloader, device, EPOCHS):
@@ -575,7 +575,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
         )
 
         # Save weights
-        save_model_weights(model, "/stage_2_weights.pth")
+        save_model_weights(model.state_dict(), "/stage_2_weights.pth")
 
     print("")
     print("Training complete!")
@@ -589,38 +589,51 @@ def main():
 
     ######################################## Prepare Data ########################################
     # Prepare train data
-    df_train: pd.DataFrame = pd.read_csv('./train.tsv', sep='\t',
-                                         lineterminator='\n', header=0)
+    df_train: pd.DataFrame = pd.read_csv('./data/train.csv')
+    df_valid: pd.DataFrame = pd.read_csv('./data/valid.csv')
 
     # Normalizing the tweets
     df_train['Text'] = df_train['Text'].apply(normalizeTweet)
+    df_valid['Text'] = df_valid['Text'].apply(normalizeTweet)
 
     # Prepare data to train the model
     train_text_data: pd.core.series.Series = df_train.Text
     train_labels: pd.core.series.Series = df_train.Label.replace(
         {'INFORMATIVE': 1, 'UNINFORMATIVE': 0})
 
-    print("train_text_data: {}, train_labels: {}".format(
-        train_text_data.count(), train_labels.count()))  # 7000, 7000
+    valid_text_data: pd.core.series.Series = df_valid.Text
+    valid_labels: pd.core.series.Series = df_valid.Label.replace(
+        {'INFORMATIVE': 1, 'UNINFORMATIVE': 0})
+
+    # print("train_text_data: {}, train_labels: {}".format(
+    #    train_text_data.count(), train_labels.count()))  # 7000, 7000
 
     ######################################## Tokenization & Input Formatting ########################################
-    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+    train_input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
         train_text_data)
 
-    input_ids: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[0], dim=0)
-    attention_masks: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[1], dim=0)
+    train_input_ids: torch.tensor = torch.cat(
+        train_input_ids_and_att_masks_tuple[0], dim=0)
+    train_attention_masks: torch.tensor = torch.cat(
+        train_input_ids_and_att_masks_tuple[1], dim=0)
     train_labels: torch.tensor = torch.tensor(train_labels)
+
+    valid_input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+        valid_text_data)
+
+    valid_input_ids: torch.tensor = torch.cat(
+        valid_input_ids_and_att_masks_tuple[0], dim=0)
+    valid_attention_masks: torch.tensor = torch.cat(
+        valid_input_ids_and_att_masks_tuple[1], dim=0)
+    valid_labels: torch.tensor = torch.tensor(valid_labels)
 
     ######################################## Split training and feed to dataloader ########################################
     # Combine the training inputs into a TensorDataset.
-    dataset: TensorDataset = TensorDataset(
-        input_ids, attention_masks, train_labels)
+    train_dataset: TensorDataset = TensorDataset(
+        train_input_ids, train_attention_masks, train_labels)
 
-    train_size: int = int(0.9 * len(dataset))
-    val_size: int = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    valid_dataset: TensorDataset = TensorDataset(
+        valid_input_ids, valid_attention_masks, valid_labels)
 
     train_dataloader: DataLoader = DataLoader(
         train_dataset,  # The training samples.
@@ -629,18 +642,18 @@ def main():
     )
 
     validation_dataloader: DataLoader = DataLoader(
-        val_dataset,  # The validation samples.
+        valid_dataset,  # The validation samples.
         # Pull out batches sequentially.
-        sampler=SequentialSampler(val_dataset),
+        sampler=SequentialSampler(valid_dataset),
         batch_size=BATCH_SIZE  # Evaluate with this batch size.
     )
 
     ######################################## Initiate Model ########################################
     model = BERTweetForBinaryClassification()
-    stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=15)
-    # model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
-    #                    map_location=device)
+    # stage_1_training(model, train_dataloader,
+    #                  validation_dataloader, device, EPOCHS=15)
+    model.load_state_dict(torch.load(
+        "finetune-BERTweet-weights/stage_1_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=3)
 
