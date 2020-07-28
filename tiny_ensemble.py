@@ -6,8 +6,10 @@ def average_softmax(softmax_vectors: List[List[torch.tensor]]) -> List[float]:
     pass
 
 
+# Vote by dimension [0][0][0 or 1]
 def major_voting(softmax_vectors: List[List[torch.tensor]]) -> List[float]:
     pass
+    
 
 
 def main() -> None:
