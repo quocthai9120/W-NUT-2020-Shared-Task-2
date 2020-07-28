@@ -23,6 +23,8 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
+from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+
 
 MAX_LENGTH = 256
 
@@ -112,10 +114,11 @@ else:
     print('No GPU available, using the CPU instead.')
     device = torch.device("cpu")
 
-model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
-                   map_location=device)
+model = BERTweetForBinaryClassification()
+model.load_state_dict(torch.load(
+    "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
-# model.cuda()
+model.cuda()
 
 # Prepare data to test the model after training
 df_test = pd.read_csv('./data/test.csv')
@@ -124,7 +127,7 @@ test_labels = df_test.Label
 test_labels = test_labels.replace('INFORMATIVE', 1)
 test_labels = test_labels.replace('UNINFORMATIVE', 0)
 
-batch_size = 16
+batch_size = 8
 
 input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
     test_text_data)

@@ -20,7 +20,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 16
+BATCH_SIZE: int = 8
 
 
 def format_time(elapsed) -> str:
@@ -573,7 +573,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
         )
 
         # Save weights
-        save_model_weights(model.state_dict(), "/stage_2_weights.pth")
+        save_model_weights(model, "/stage_2_weights.pth")
 
     print("")
     print("Training complete!")
@@ -648,12 +648,12 @@ def main():
 
     ######################################## Initiate Model ########################################
     model = BERTweetForBinaryClassification()
-    # stage_1_training(model, train_dataloader,
-    #                  validation_dataloader, device, EPOCHS=15)
-    model.load_state_dict(torch.load(
-        "finetune-BERTweet-weights/stage_1_weights.pth", map_location=device))
+    stage_1_training(model, train_dataloader,
+                     validation_dataloader, device, EPOCHS=15)
+    # model.load_state_dict(torch.load(
+    #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=3)
+                     validation_dataloader, device, EPOCHS=5)
 
 
 if __name__ == "__main__":
