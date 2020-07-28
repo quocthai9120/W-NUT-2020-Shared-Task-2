@@ -186,6 +186,7 @@ for batch in prediction_dataloader:
 
 
 torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
+torch.save(true_labels, "./softmax/true_labels.pt")
 
 print("  Accuracy: {0:.4f}".format(
     flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))

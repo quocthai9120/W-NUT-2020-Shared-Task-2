@@ -1,11 +1,16 @@
 import torch
 from typing import List
 import numpy as np
+from sklearn.metrics import classification_report
+
+
+def get_classification_report(labels, preds):
+    return classification_report(labels, preds)
 
 
 def average_softmax(softmax_vectors: List[List[torch.tensor]]) -> List[float]:
     num_models: int = len(softmax_vectors[0])
-    intermed_result: List[List[float]] = [[] for _ in range(num_models)]
+    intermed_result: List[List[float]] = [[0, 0] for _ in range(num_models)]
 
     for model in softmax_vectors:
         index = 0
@@ -56,11 +61,9 @@ def main() -> None:
         # roberta_base_softmax,
         lr_softmax,
     ]
-    print(len(bertweet_softmax))
-    print(bertweet_softmax[0])
-    print(len(lr_softmax))
-    print(lr_softmax[0])
-    print(major_voting(softmax_vectors))
+    preds = average_softmax(softmax_vectors)
+    labels = torch.load('./softmax/true_labels.pt')
+    print(classification_report(labels, preds))
 
 
 if __name__ == "__main__":
