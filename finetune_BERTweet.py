@@ -1,13 +1,11 @@
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset, random_split
-
 import argparse
 import pandas as pd
 import numpy as np
 import random
 import datetime
 import time
-
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
 from BERTweetForBinaryClassification import BERTweetForBinaryClassification
