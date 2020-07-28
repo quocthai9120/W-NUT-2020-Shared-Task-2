@@ -219,18 +219,10 @@ def main() -> None:
         for i in range(len(logits)):
             valid_softmax_outputs.append(curr_softmax_outputs[i])
 
-        torch.save(train_softmax_outputs,
-                   "./softmax/BERTweet_softmax/train_softmax.pt")
-        torch.save(valid_softmax_outputs,
-                   "./softmax/BERTweet_softmax/valid_softmax.pt")
-        train_softmax_outputs = torch.load(
-            ".softmax/BERTweet_softmax/train_softmax.pt")
-        valid_softmax_outputs = torch.load(
-            ".softmax/BERTweet_softmax/valid_softmax.pt")
-        print("Train:")
-        print(train_softmax_outputs)
-        print("Valid:")
-        print(valid_softmax_outputs)
+    torch.save(train_softmax_outputs,
+               "./softmax/BERTweet_softmax/train_softmax.pt")
+    torch.save(valid_softmax_outputs,
+               "./softmax/BERTweet_softmax/valid_softmax.pt")
 
 
 if __name__ == "__main__":

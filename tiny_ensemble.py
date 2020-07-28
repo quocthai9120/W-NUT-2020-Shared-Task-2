@@ -14,12 +14,12 @@ def main() -> None:
     # Load eval softmax vectors
     bertweet_softmax: List[torch.tensor] = torch.load(
         "./softmax/BERTweet_softmax/test_softmax.pt")
-    bert_base_softmax: List[torch.tensor] = torch.load(
-        "./softmax/BERTbase_softmax/test_softmax.pt"
-    )
-    roberta_base_softmax: List[torch.tensor] = torch.load(
-        "./softmax/Roberta_softmax/test_softmax.pt"
-    )
+    # bert_base_softmax: List[torch.tensor] = torch.load(
+    #     "./softmax/BERTbase_softmax/test_softmax.pt"
+    # )
+    # roberta_base_softmax: List[torch.tensor] = torch.load(
+    #     "./softmax/Roberta_softmax/test_softmax.pt"
+    # )
     lr_softmax: List[torch.tensor] = torch.load(
         "./softmax/lr_softmax/test_softmax.pt"
     )
