@@ -26,11 +26,17 @@ def main() -> None:
 
     softmax_vectors: List[List[torch.tensor]] = [
         bertweet_softmax,
-        bert_base_softmax,
-        roberta_base_softmax,
+        # bert_base_softmax,
+        # roberta_base_softmax,
         lr_softmax,
     ]
 
+    print(len(bertweet_softmax))
+    print(bertweet_softmax[0])
+    print("Hello")
+    print(len(lr_softmax))
+    print(lr_softmax[0])
+    exit()
     print(average_softmax(softmax_vectors))
     print(major_voting(softmax_vectors))
 

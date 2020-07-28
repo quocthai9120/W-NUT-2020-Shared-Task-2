@@ -118,7 +118,7 @@ model = torch.load("finetune-BERTweet-weights/stage_2_weights.pth",
 # model.cuda()
 
 # Prepare data to test the model after training
-df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
+df_test = pd.read_csv('./data/test.csv')
 test_text_data = df_test.Text.apply(normalizeTweet)
 test_labels = df_test.Label
 test_labels = test_labels.replace('INFORMATIVE', 1)
