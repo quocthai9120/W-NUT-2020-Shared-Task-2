@@ -26,7 +26,12 @@ def average_softmax(softmax_vectors: List[List[torch.tensor]]) -> List[float]:
     return result
 
 
+# Vote by dimension [0][0][0 or 1]
 def major_voting(softmax_vectors: List[List[torch.tensor]]) -> List[float]:
+<<<<<<< HEAD
+    pass
+    
+=======
     result: List[float] = []
     num_models: int = len(softmax_vectors[0])
     for model in softmax_vectors:
@@ -39,6 +44,7 @@ def major_voting(softmax_vectors: List[List[torch.tensor]]) -> List[float]:
             result.append(float(instance_sum // (num_models / 2)))
 
     return result
+>>>>>>> 2847ce5b2906137e96c31723576414bd990fc60b
 
 
 def main() -> None:
