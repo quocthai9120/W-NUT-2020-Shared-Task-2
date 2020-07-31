@@ -99,98 +99,112 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     return tuple([input_ids, attention_masks])
 
 
-# If there's a GPU available...
-if torch.cuda.is_available():
-
-    # Tell PyTorch to use the GPU.
-    device = torch.device("cuda")
-
-    print('There are %d GPU(s) available.' % torch.cuda.device_count())
-
-    print('We will use the GPU:', torch.cuda.get_device_name(0))
-
-# If not...
-else:
-    print('No GPU available, using the CPU instead.')
-    device = torch.device("cpu")
-
-model = BERTweetForBinaryClassification()
-model.load_state_dict(torch.load(
-    "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
-
-model.cuda()
-
-# Prepare data to test the model after training
-df_test = pd.read_csv('./data/test.csv')
-test_text_data = df_test.Text.apply(normalizeTweet)
-test_labels = df_test.Label
-test_labels = test_labels.replace('INFORMATIVE', 1)
-test_labels = test_labels.replace('UNINFORMATIVE', 0)
-
-batch_size = 8
-
-input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
-    test_text_data)
-
-prediction_inputs: torch.tensor = torch.cat(
-    input_ids_and_att_masks_tuple[0], dim=0)
-prediction_masks: torch.tensor = torch.cat(
-    input_ids_and_att_masks_tuple[1], dim=0)
-prediction_labels: torch.tensor = torch.tensor(test_labels)
-
-# Create the DataLoader.
-prediction_data = TensorDataset(
-    prediction_inputs, prediction_masks, prediction_labels)
-prediction_sampler = SequentialSampler(prediction_data)
-prediction_dataloader = DataLoader(
-    prediction_data, sampler=prediction_sampler, batch_size=batch_size)
-
-################# TEST ##################
-total_eval_accuracy = 0
-
-# Prediction on test set
-print('Predicting labels for {:,} test sentences...'.format(
-    len(prediction_inputs)))
-# Put model in evaluation mode
-model.eval()
-# Tracking variables
-predictions, softmax_outputs, true_labels = [], [], []
-# Predict
-count = 0
-for batch in prediction_dataloader:
-    # Add batch to GPU
-    batch = tuple(t.to(device) for t in batch)
-
-    # Unpack the inputs from our dataloader
-    b_input_ids, b_input_mask, b_labels = batch
-
-    # Telling the model not to compute or store gradients, saving memory and
-    # speeding up prediction
-    with torch.no_grad():
-        # Forward pass, calculate logit predictions
-        outputs = model(b_input_ids,
-                        attention_mask=b_input_mask)
-    logits = outputs[0]
-    # Move logits and labels to CPU
-    logits = logits.detach().cpu().numpy()
-    label_ids = b_labels.to('cpu').numpy()
-
-    softmax: torch.nn.Softmax = torch.nn.Softmax()
-    curr_softmax_outputs: torch.tensor = softmax(torch.tensor(logits))
-
-    # Store predictions, softmax vectors, and true labels
-    for i in range(len(logits)):
-        predictions.append(logits[i])
-        softmax_outputs.append(curr_softmax_outputs[i])
-        true_labels.append(label_ids[i])
+def export_wrong_predictions(preds: np.array, labels: np.array, data: pd.DataFrame) -> None:
+    wrong_pred_index: List = []
+    for i in range(len(preds)):
+        if preds[i] != labels[i]:
+            wrong_pred_index.append(i)
+    filtered_data = data[data.index.isin(wrong_pred_index)]
+    filtered_data.to_csv('finetune_BERTweet_wrong_preds.csv')
 
 
-torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
-torch.save(true_labels, "./softmax/true_labels.pt")
+def main() -> None:
+    # If there's a GPU available...
+    if torch.cuda.is_available():
 
-print("  Accuracy: {0:.4f}".format(
-    flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
-print("  F1-Score: {0:.4f}".format(
-    get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
-print("Report")
-print(get_classification_report(np.asarray(true_labels), np.asarray(predictions)))
+        # Tell PyTorch to use the GPU.
+        device = torch.device("cuda")
+
+        print('There are %d GPU(s) available.' % torch.cuda.device_count())
+
+        print('We will use the GPU:', torch.cuda.get_device_name(0))
+
+    # If not...
+    else:
+        print('No GPU available, using the CPU instead.')
+        device = torch.device("cpu")
+
+    model = BERTweetForBinaryClassification()
+    model.load_state_dict(torch.load(
+        "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+
+    model.cuda()
+
+    # Prepare data to test the model after training
+    df_test = pd.read_csv('./data/test.csv')
+    test_text_data = df_test.Text.apply(normalizeTweet)
+    test_labels = df_test.Label
+    test_labels = test_labels.replace('INFORMATIVE', 1)
+    test_labels = test_labels.replace('UNINFORMATIVE', 0)
+
+    batch_size = 8
+
+    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+        test_text_data)
+
+    prediction_inputs: torch.tensor = torch.cat(
+        input_ids_and_att_masks_tuple[0], dim=0)
+    prediction_masks: torch.tensor = torch.cat(
+        input_ids_and_att_masks_tuple[1], dim=0)
+    prediction_labels: torch.tensor = torch.tensor(test_labels)
+
+    # Create the DataLoader.
+    prediction_data = TensorDataset(
+        prediction_inputs, prediction_masks, prediction_labels)
+    prediction_sampler = SequentialSampler(prediction_data)
+    prediction_dataloader = DataLoader(
+        prediction_data, sampler=prediction_sampler, batch_size=batch_size)
+
+    ################# TEST ##################
+    total_eval_accuracy = 0
+
+    # Prediction on test set
+    print('Predicting labels for {:,} test sentences...'.format(
+        len(prediction_inputs)))
+    # Put model in evaluation mode
+    model.eval()
+    # Tracking variables
+    predictions, softmax_outputs, true_labels = [], [], []
+    # Predict
+    count = 0
+    for batch in prediction_dataloader:
+        # Add batch to GPU
+        batch = tuple(t.to(device) for t in batch)
+
+        # Unpack the inputs from our dataloader
+        b_input_ids, b_input_mask, b_labels = batch
+
+        # Telling the model not to compute or store gradients, saving memory and
+        # speeding up prediction
+        with torch.no_grad():
+            # Forward pass, calculate logit predictions
+            outputs = model(b_input_ids,
+                            attention_mask=b_input_mask)
+        logits = outputs[0]
+        # Move logits and labels to CPU
+        logits = logits.detach().cpu().numpy()
+        label_ids = b_labels.to('cpu').numpy()
+
+        softmax: torch.nn.Softmax = torch.nn.Softmax()
+        curr_softmax_outputs: torch.tensor = softmax(torch.tensor(logits))
+
+        # Store predictions, softmax vectors, and true labels
+        for i in range(len(logits)):
+            predictions.append(logits[i])
+            softmax_outputs.append(curr_softmax_outputs[i])
+            true_labels.append(label_ids[i])
+
+    torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
+    torch.save(true_labels, "./softmax/true_labels.pt")
+
+    print("  Accuracy: {0:.4f}".format(
+        flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
+    print("  F1-Score: {0:.4f}".format(
+        get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
+    print("Report")
+    print(get_classification_report(np.asarray(
+        true_labels), np.asarray(predictions)))
+
+
+if __name__ == "__main__":
+    main()
