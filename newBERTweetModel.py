@@ -45,7 +45,7 @@ class newBERTweetModelForClassification(BertPreTrainedModel):
         last_sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
         second_to_last_sequence_output: torch.tensor = hidden_states[-2][:, 0, :]
         third_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]
-        fourth_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]
+        fourth_to_last_sequence_output: torch.tensor = hidden_states[-4][:, 0, :]
         sequence_output: torch.tensor = torch.cat((
             last_sequence_output,
             second_to_last_sequence_output,

@@ -20,7 +20,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 16
+BATCH_SIZE: int = 32
 
 
 def format_time(elapsed) -> str:
@@ -362,7 +362,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=2e-5,  # args.learning_rate - default is 5e-5
+                      lr=3e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
