@@ -5,6 +5,8 @@ from numpy import random
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import accuracy_score, confusion_matrix
+import sys
+sys.path.append("/home/vina/W-NUT-2020-Shared-Task-2/")
 from TweetNormalizer import normalizeTweet
 
 from sklearn.naive_bayes import MultinomialNB
@@ -13,7 +15,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
 
 # Read data in
-df = pd.read_csv('/home/vina/Desktop/W-NUT/train.tsv', sep='\t')
+df = pd.read_csv('./train.tsv', sep='\t')
 df = df[pd.notnull(df['Label'])]
 #print(df.head(10))
 #print(df['Text'].apply(lambda x: len(x.split(' '))).sum())
@@ -27,7 +29,7 @@ X_train = df.Text
 y_train = df.Label
 
 # Prepare data to test the model after training
-df_test = pd.read_csv('/home/vina/Desktop/W-NUT/test.tsv', sep='\t')
+df_test = pd.read_csv('./test.tsv', sep='\t')
 X_test = df_test.Text.apply(normalizeTweet)
 y_test = df_test.Label
 
