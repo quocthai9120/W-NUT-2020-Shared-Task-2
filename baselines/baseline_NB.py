@@ -1,20 +1,11 @@
 # NOTE: valid.tsv has been renamed to test.tsv. You still need to think about how to "test" the data
-import logging
 import pandas as pd
 import numpy as np
 from numpy import random
-import gensim
-import nltk
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
-from nltk.corpus import stopwords
-import re
-from bs4 import BeautifulSoup
 from TweetNormalizer import normalizeTweet
-#%matplotlib inline
-
 
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline

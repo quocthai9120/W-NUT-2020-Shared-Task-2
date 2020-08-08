@@ -16,7 +16,7 @@ import numpy as np
 from numpy import random
 import nltk
 from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import re
 from TweetNormalizer import normalizeTweet
 #from BERT_embeddings import get_bert_embedding
@@ -141,7 +141,7 @@ train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 # The DataLoader needs to know our batch size for training, so we specify it
 # here. For fine-tuning BERT on a specific task, the authors recommend a batch
 # size of 16 or 32.
-batch_size = 16
+batch_size = 8
 
 # Create the DataLoaders for our training and validation sets.
 # We'll take training samples in random order.
@@ -175,7 +175,7 @@ model.cuda()
 # Note: AdamW is a class from the huggingface library (as opposed to pytorch)
 # I believe the 'W' stands for 'Weight Decay fix"
 optimizer = AdamW(model.parameters(),
-                  lr=2e-5,  # args.learning_rate - default is 5e-5, our notebook had 2e-5
+                  lr=2e-6,  # args.learning_rate - default is 5e-5, our notebook had 2e-5
                   eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                   )
 
@@ -183,7 +183,7 @@ optimizer = AdamW(model.parameters(),
 # Number of training epochs. The BERT authors recommend between 2 and 4.
 # We chose to run for 4, but we'll see later that this may be over-fitting the
 # training data.
-epochs = 5
+epochs = 4
 
 # Total number of training steps is [number of batches] x [number of epochs].
 # (Note that this is not the same as the number of training samples).

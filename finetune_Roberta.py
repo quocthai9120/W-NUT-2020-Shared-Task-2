@@ -13,7 +13,7 @@ import numpy as np
 from numpy import random
 import nltk
 from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import re
 from TweetNormalizer import normalizeTweet
 from BERT_embeddings import get_bert_embedding
@@ -64,7 +64,7 @@ train_labels = train_labels.replace('UNINFORMATIVE', 0)
 # Load the BERT tokenizer.
 print('Loading BERT tokenizer...')
 tokenizer = RobertaTokenizer.from_pretrained(
-    'roberta-base', do_lower_case=True)
+    'roberta-large', do_lower_case=True)
 
 # Find the longest sentence in the dataset
 max_len = 0
@@ -160,7 +160,7 @@ validation_dataloader = DataLoader(
 # Load BertForSequenceClassification, the pretrained BERT model with a single
 # linear classification layer on top.
 model = RobertaForSequenceClassification.from_pretrained(
-    "roberta-base",  # Use the 12-layer BERT model, with an uncased vocab.
+    "roberta-large",  # Use the 12-layer BERT model, with an uncased vocab.
     num_labels=2,  # The number of output labels--2 for binary classification.
     # You can increase this for multi-class tasks.
     output_attentions=False,  # Whether the model returns attentions weights.
@@ -168,7 +168,7 @@ model = RobertaForSequenceClassification.from_pretrained(
 )
 
 # Tell pytorch to run this model on the GPU.
-# model.cuda()
+model.cuda()
 
 # Note: AdamW is a class from the huggingface library (as opposed to pytorch)
 # I believe the 'W' stands for 'Weight Decay fix"
@@ -238,7 +238,7 @@ total_t0 = time.time()
 
 
 # Save model weights
-model_weights = "./finetune-roberta-weights"
+model_weights = "./finetune-roberta-5epochs-weights"
 
 # Create output directory if needed
 if not os.path.exists(model_weights):

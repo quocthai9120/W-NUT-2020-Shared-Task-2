@@ -4,19 +4,16 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import accuracy_score, confusion_matrix
-import re
 sys.path.append("/home/vina/W-NUT-2020-Shared-Task-2/")
 from TweetNormalizer import normalizeTweet
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import classification_report
 import torch
 
-
 # Read data in
-df = pd.read_csv('data/train.csv')
+df = pd.read_csv('train.tsv', sep='\t')
 df = df[pd.notnull(df['Label'])]
 
 # Count number of instances to read data in
@@ -36,7 +33,7 @@ X_train = df.Text
 y_train = df.Label
 
 # Prepare data to test the model after training
-df_test = pd.read_csv('data/test.csv')
+df_test = pd.read_csv('test.tsv', sep='\t')
 X_test = df_test.Text.apply(normalizeTweet)
 y_test = df_test.Label
 
@@ -49,19 +46,18 @@ logreg = Pipeline([('vect', CountVectorizer()),
 
 logreg.fit(X_train, y_train)
 
-y_pred = logreg.predict_proba(X_test)
+#y_pred = logreg.predict_proba(X_test)
+y_pred = logreg.predict(X_test)
 
-list_ypred = []
+# Print probabilities
+#list_ypred = []
+# for i in y_pred:
+#     tensor_i = torch.from_numpy(i)
+#     list_ypred.append(tensor_i)
+#print(list_ypred)
+#torch.save(list_ypred, "softmax/lr_softmax/test_softmax.pt")
 
-for i in y_pred:
-    tensor_i = torch.from_numpy(i)
-    list_ypred.append(tensor_i)
+my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
 
-print(list_ypred)
-
-torch.save(list_ypred, "softmax/lr_softmax/test_softmax.pt")
-
-#my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
-
-#print('accuracy %s' % accuracy_score(y_pred, y_test))
-#print(classification_report(y_test, y_pred, target_names=my_tags))
+print('accuracy %s' % accuracy_score(y_pred, y_test))
+print(classification_report(y_test, y_pred, target_names=my_tags))
