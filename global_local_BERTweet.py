@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from newBERTweetModel import newBERTweetModelForClassification
+from global_local_BERTweet_model import BERTweetModelForClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -111,7 +111,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./new_finetune-BERTweet-weights"
+    model_weights = "./finetune-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -132,8 +132,6 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
     model.dense.bias.requires_grad = True
     model.dense_2.weight.requires_grad = True
     model.dense_2.bias.requires_grad = True
-    model.dense_3.weight.requires_grad = True
-    model.dense_3.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     if device == torch.device("cuda"):
@@ -649,9 +647,9 @@ def main():
     )
 
     ######################################## Initiate Model ########################################
-    model = newBERTweetModelForClassification()
+    model = BERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=8)
+                     validation_dataloader, device, EPOCHS=10)
     # model.load_state_dict(torch.load(
     #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
