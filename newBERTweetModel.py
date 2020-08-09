@@ -43,6 +43,7 @@ class newBERTweetModelForClassification(BertPreTrainedModel):
         # Take <CLS> token for Native Layer Norm Backward
         hidden_states: Tuple[torch.tensor] = outputs[2]
         last_sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
+        # BUG ALERT: 3rd and 4th to last are the same, freak
         second_to_last_sequence_output: torch.tensor = hidden_states[-2][:, 0, :]
         third_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]
         fourth_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]

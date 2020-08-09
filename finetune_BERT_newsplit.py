@@ -34,8 +34,6 @@ else:
     device = torch.device("cpu")
 
 
-#############################################################
-
 # Prepare train data
 df_train = pd.read_csv('./data/train.csv', header=0)
 
@@ -63,7 +61,7 @@ train_labels = train_labels.replace('UNINFORMATIVE', 0)
 # Load the BERT tokenizer.
 print('Loading BERT tokenizer...')
 tokenizer = BertTokenizer.from_pretrained(
-    'bert-large-uncased', do_lower_case=True)
+    'bert-base-uncased', do_lower_case=True)
 
 # Find the longest sentence in the dataset
 max_len = 0
@@ -110,26 +108,37 @@ input_ids = torch.cat(input_ids, dim=0)
 attention_masks = torch.cat(attention_masks, dim=0)
 train_labels = torch.tensor(train_labels)
 
+
 # Combine the training inputs into a TensorDataset.
 train_dataset = TensorDataset(input_ids, attention_masks, train_labels)
 
 
 '''
-For new split of the dataset & BERT-large:
+Validation dataset
 '''
 
-# Prepare valid data
+##############################################  
 df_valid = pd.read_csv('./data/valid.csv', header=0)
 
 # Normalizing the tweets
 df_valid['Text'] = df_valid['Text'].apply(normalizeTweet)
 
-# Prepare validation data to the model
+# Prepare data to train the model
 valid_text_data = df_valid.Text
 valid_labels = df_valid.Label
 valid_labels = valid_labels.replace('INFORMATIVE', 1)
 valid_labels = valid_labels.replace('UNINFORMATIVE', 0)
 
+# print("train_text_data: {}, train_labels: {}".format(train_text_data.count(), train_labels.count())) #7000, 7000
+
+############################
+
+# Tokenization & Input formatting
+# We are required to:
+
+# 1. Add special tokens to the start and end of each sentence.
+# 2. Pad & truncate all sentences to a single constant length.
+# 3. Explicitly differentiate real tokens from padding tokens with the "attention mask".
 
 # Find the longest sentence in the dataset
 max_len = 0
@@ -176,16 +185,21 @@ input_ids = torch.cat(input_ids, dim=0)
 attention_masks = torch.cat(attention_masks, dim=0)
 valid_labels = torch.tensor(valid_labels)
 
-#############################
 
-# Combine the training inputs into a TensorDataset.
+# Combine the validation inputs into a TensorDataset.
 valid_dataset = TensorDataset(input_ids, attention_masks, valid_labels)
+
+
+
+######################################################
+
+
 
 
 # The DataLoader needs to know our batch size for training, so we specify it
 # here. For fine-tuning BERT on a specific task, the authors recommend a batch
 # size of 16 or 32.
-batch_size = 32
+batch_size = 16
 
 # Create the DataLoaders for our training and validation sets.
 # We'll take training samples in random order.
@@ -206,7 +220,7 @@ validation_dataloader = DataLoader(
 # Load BertForSequenceClassification, the pretrained BERT model with a single
 # linear classification layer on top.
 model = BertForSequenceClassification.from_pretrained(
-    "bert-large-uncased",  # Use the 12-layer BERT model, with an uncased vocab.
+    "bert-base-uncased",  # Use the 12-layer BERT model, with an uncased vocab.
     num_labels=2,  # The number of output labels--2 for binary classification.
     # You can increase this for multi-class tasks.
     output_attentions=False,  # Whether the model returns attentions weights.
@@ -264,6 +278,9 @@ def format_time(elapsed):
 
 # Training loop
 
+# This training code is based on the `run_glue.py` script here:
+# https://github.com/huggingface/transformers/blob/5bfcd0485ece086ebcbed2d008813037968a9e58/examples/run_glue.py#L128
+
 # Set the seed value all over the place to make this reproducible.
 seed_val = 42
 
@@ -281,7 +298,7 @@ total_t0 = time.time()
 
 
 # Save model weights
-model_weights = "./finetune-bert-large"
+model_weights = "./bertendtoend-5epochs-new-weights"
 
 # Create output directory if needed
 if not os.path.exists(model_weights):

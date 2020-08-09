@@ -2,10 +2,7 @@ import torch
 import pandas as pd
 import numpy as np
 from numpy import random
-import nltk
 from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
-import re
 from transformers import BertTokenizer
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
@@ -18,6 +15,7 @@ from BERT_embeddings import get_bert_embedding
 import os
 import pickle
 from sklearn.metrics import f1_score
+from sklearn.metrics import classification_report
 
 # Function to calculate the accuracy of our predictions vs labels
 
@@ -33,6 +31,11 @@ def get_f1_score(preds, labels):
     labels_flat = labels.flatten()
     return f1_score(pred_flat, labels_flat)
 
+def get_classification_report(labels, preds):
+    pred_flat = np.argmax(preds, axis=1).flatten()
+    labels_flat = labels.flatten()
+    #my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
+    return classification_report(labels_flat, pred_flat)
 
 # If there's a GPU available...
 if torch.cuda.is_available():
@@ -49,12 +52,12 @@ else:
     print('No GPU available, using the CPU instead.')
     device = torch.device("cpu")
 
-model = torch.load("weights/weights.pth", map_location=device)
+model = torch.load("./finetune-bert-large/weights.pth", map_location=device)
 
-# model.cuda()
+model.cuda()
 
 # Prepare data to test the model after training
-df_test = pd.read_csv('./test.tsv', sep='\t', lineterminator='\n', header=0)
+df_test = pd.read_csv('./data/test.csv',  header=0)
 test_text_data = df_test.Text.apply(normalizeTweet)
 test_labels = df_test.Label
 test_labels = test_labels.replace('INFORMATIVE', 1)
@@ -140,3 +143,6 @@ print("  Accuracy: {0:.2f}".format(
     flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
 print("  F1-Score: {0:.2f}".format(
     get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
+print("Report")
+print(get_classification_report(np.asarray(
+        true_labels), np.asarray(predictions)))
