@@ -649,11 +649,11 @@ def main():
     ######################################## Initiate Model ########################################
     model = newBERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=15)
+                     validation_dataloader, device, EPOCHS=8)
     # model.load_state_dict(torch.load(
     #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=5)
+                     validation_dataloader, device, EPOCHS=6)
 
 
 if __name__ == "__main__":

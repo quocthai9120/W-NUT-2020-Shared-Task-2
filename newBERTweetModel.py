@@ -20,10 +20,10 @@ class newBERTweetModelForClassification(BertPreTrainedModel):
             config=config
         )
         self.dense = nn.Linear(in_features=3072,
-                               out_features=3072,
+                               out_features=1536,
                                )
         self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=3072,
+        self.dense_2 = nn.Linear(in_features=1536,
                                  out_features=768,
                                  )
         self.dense_3 = nn.Linear(in_features=768,
@@ -57,6 +57,7 @@ class newBERTweetModelForClassification(BertPreTrainedModel):
         ), dim=1)
 
         sequence_output = self.dense(sequence_output)
+        sequence_output = self.dropout(sequence_output)
         sequence_output = self.dense_2(sequence_output)
         sequence_output = self.dropout(sequence_output)
         sequence_output = self.dense_3(sequence_output)
