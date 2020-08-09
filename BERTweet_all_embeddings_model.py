@@ -5,7 +5,7 @@ from typing import Tuple
 import torch
 
 
-class newBERTweetModelForClassification(BertPreTrainedModel):
+class BERTweetModelForClassification(BertPreTrainedModel):
     base_model_prefix = "roberta"
 
     def __init__(self):
@@ -19,14 +19,11 @@ class newBERTweetModelForClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=3072,
-                               out_features=1536,
+        self.dense = nn.Linear(in_features=9216,
+                               out_features=3072,
                                )
         self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=1536,
-                                 out_features=768,
-                                 )
-        self.dense_3 = nn.Linear(in_features=768,
+        self.dense_2 = nn.Linear(in_features=3072,
                                  out_features=256,
                                  )
         self.classifier = nn.Linear(in_features=256,
@@ -46,22 +43,36 @@ class newBERTweetModelForClassification(BertPreTrainedModel):
         # Take <CLS> token for Native Layer Norm Backward
         hidden_states: Tuple[torch.tensor] = outputs[2]
         last_sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
-        # BUG ALERT: 3rd and 4th to last are the same, freak
         second_to_last_sequence_output: torch.tensor = hidden_states[-2][:, 0, :]
         third_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]
         fourth_to_last_sequence_output: torch.tensor = hidden_states[-4][:, 0, :]
+        fifth_to_last_sequence_output: torch.tensor = hidden_states[-5][:, 0, :]
+        sixth_to_last_sequence_output: torch.tensor = hidden_states[-6][:, 0, :]
+        seventh_to_last_sequence_output: torch.tensor = hidden_states[-7][:, 0, :]
+        eighth_to_last_sequence_output: torch.tensor = hidden_states[-8][:, 0, :]
+        nineth_to_last_sequence_output: torch.tensor = hidden_states[-9][:, 0, :]
+        tenth_to_last_sequence_output: torch.tensor = hidden_states[-10][:, 0, :]
+        eleventh_to_last_sequence_output: torch.tensor = hidden_states[-11][:, 0, :]
+        first_sequence_output: torch.tensor = hidden_states[0][:, 0, :]
+
         sequence_output: torch.tensor = torch.cat((
             last_sequence_output,
             second_to_last_sequence_output,
             third_to_last_sequence_output,
-            fourth_to_last_sequence_output
+            fourth_to_last_sequence_output,
+            fifth_to_last_sequence_output,
+            sixth_to_last_sequence_output,
+            seventh_to_last_sequence_output,
+            eighth_to_last_sequence_output,
+            nineth_to_last_sequence_output,
+            tenth_to_last_sequence_output,
+            eleventh_to_last_sequence_output,
+            first_sequence_output
         ), dim=1)
 
         sequence_output = self.dense(sequence_output)
         sequence_output = self.dropout(sequence_output)
         sequence_output = self.dense_2(sequence_output)
-        sequence_output = self.dropout(sequence_output)
-        sequence_output = self.dense_3(sequence_output)
         sequence_output = self.dropout(sequence_output)
 
         logits: torch.tensor = self.classifier(sequence_output)

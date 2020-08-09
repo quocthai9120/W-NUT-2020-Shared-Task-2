@@ -5,3 +5,6 @@ __pycache__/
 weights/
 roberta_weights/
 finetune-BERTweet-weights/
+temp.py
+finetune-BERTweet-all-embeddings-weights/
+new_finetune-BERTweet-weights/
