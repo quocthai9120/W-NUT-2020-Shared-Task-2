@@ -63,7 +63,7 @@ train_labels = train_labels.replace('UNINFORMATIVE', 0)
 # Load the BERT tokenizer.
 print('Loading BERT tokenizer...')
 tokenizer = BertTokenizer.from_pretrained(
-    'bert-large-uncased', do_lower_case=True)
+    'bert-base-uncased', do_lower_case=True)
 
 # Find the longest sentence in the dataset
 max_len = 0
@@ -206,7 +206,8 @@ validation_dataloader = DataLoader(
 # Load BertForSequenceClassification, the pretrained BERT model with a single
 # linear classification layer on top.
 model = BertForSequenceClassification.from_pretrained(
-    "bert-large-uncased",  # Use the 12-layer BERT model, with an uncased vocab.
+    # Use the 12-layer BERT model, with an uncased vocab.
+    "bert-large-uncased",
     num_labels=2,  # The number of output labels--2 for binary classification.
     # You can increase this for multi-class tasks.
     output_attentions=False,  # Whether the model returns attentions weights.
