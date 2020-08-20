@@ -291,6 +291,7 @@ print("Saving model to %s" % model_weights)
 
 # For each epoch...
 for epoch_i in range(0, epochs):
+    model.resize_token_embeddings(len(tokenizer))
 
     # ========================================
     #               Training
