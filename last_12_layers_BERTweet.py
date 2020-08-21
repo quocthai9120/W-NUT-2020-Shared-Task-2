@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from global_local_BERTweet_model import BERTweetModelForClassification
+from last_12_layers_BERTweet_model import BERTweetModelForClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -112,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./data_join_global-local-BERTweet-weights"
+    model_weights = "./last_12_layers-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -374,7 +374,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
 
     # Create the learning rate scheduler.
     scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                num_warmup_steps=1,  # Default value in run_glue.py
+                                                num_warmup_steps=0,  # Default value in run_glue.py
                                                 num_training_steps=total_steps)
 
     ######################################## Training ########################################
@@ -652,9 +652,9 @@ def main():
     ######################################## Initiate Model ########################################
     model = BERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=12)
+                     validation_dataloader, device, EPOCHS=10)
     # model.load_state_dict(torch.load(
-    #     "data_join_global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=6)
 
