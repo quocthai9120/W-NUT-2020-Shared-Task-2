@@ -1,53 +1,46 @@
 import torch
-import pandas as pd
+from global_local_BERTweet_model import BERTweetModelForClassification as global_local_BERTweet
+from BERTweetForBinaryClassification import BERTweetForBinaryClassification as original_BERTweet
+from newBERTweetModel import newBERTweetModelForClassification as last_four_layers_BERTweet
+from BERTweet_all_embeddings_model import BERTweetModelForClassification as all_embeddings_BERTweet
+
 import numpy as np
-from numpy import random
-import nltk
-from sklearn.metrics import accuracy_score, confusion_matrix
-#import matplotlib.pyplot as plt
-import re
-from torch.utils.data import TensorDataset, random_split
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-from transformers import BertForSequenceClassification, AdamW, BertConfig
-from transformers import get_linear_schedule_with_warmup
-
-from TweetNormalizer import normalizeTweet
-from BERT_embeddings import get_bert_embedding
-import os
-import pickle
-from sklearn.metrics import f1_score
-from sklearn.metrics import classification_report
-
-from typing import Tuple, List
 import argparse
+
+from sklearn.metrics import accuracy_score, f1_score, classification_report
+
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
+from typing import List, Tuple
 
-from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+from torch.utils.data import DataLoader, TensorDataset, SequentialSampler
 
+from TweetNormalizer import normalizeTweet
+from transformers import BertForSequenceClassification, AdamW, BertConfig
+from transformers import get_linear_schedule_with_warmup
+import os
+import pandas as pd
 
+BATCH_SIZE = 32
 MAX_LENGTH = 256
 
 
-# Function to calculate the accuracy of our predictions vs labels
-
-
-def flat_accuracy(preds, labels):
+def flat_accuracy(preds, labels) -> np.long:
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
 
-def get_classification_report(labels, preds):
-    pred_flat = np.argmax(preds, axis=1).flatten()
-    labels_flat = labels.flatten()
-    return classification_report(labels_flat, pred_flat)
-
-
-def get_f1_score(preds, labels):
+def get_f1_score(preds, labels) -> np.long:
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
     return f1_score(labels_flat, pred_flat)
+
+
+def get_classification_report(labels, preds):
+    pred_flat = np.argmax(preds, axis=1).flatten()
+    labels_flat = labels.flatten()
+    return classification_report(labels_flat, pred_flat, digits=4)
 
 
 def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, List]:
@@ -74,8 +67,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (3) Map tokens to IDs
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + \
-            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
+        subwords: str = '<s> ' + bpe.encode(line) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -100,71 +92,28 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     return tuple([input_ids, attention_masks])
 
 
-def export_wrong_predictions(preds: np.array, labels: np.array, data: pd.DataFrame) -> None:
-    pred_flat = np.argmax(preds, axis=1).flatten()
-    labels_flat = labels.flatten()
-    wrong_pred_index: List = []
-    for i in range(len(pred_flat)):
-        if pred_flat[i] != labels_flat[i]:
-            wrong_pred_index.append(i)
-    filtered_data = data[data.index.isin(wrong_pred_index)]
-    filtered_data.to_csv('finetune_BERTweet_wrong_preds.csv')
-
-
-def main() -> None:
-    # If there's a GPU available...
+def setup_device() -> torch.device:
+    """
+    Post: Return torch.device instance repr whether we are using a CUDA GPU or CPU
+    """
     if torch.cuda.is_available():
-
         # Tell PyTorch to use the GPU.
-        device = torch.device("cuda")
-
         print('There are %d GPU(s) available.' % torch.cuda.device_count())
-
         print('We will use the GPU:', torch.cuda.get_device_name(0))
-
-    # If not...
+        return torch.device("cuda")
     else:
         print('No GPU available, using the CPU instead.')
-        device = torch.device("cpu")
+        return torch.device("cpu")
 
-    model = BERTweetForBinaryClassification()
-    model.load_state_dict(torch.load(
-        "test-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
-    model.cuda()
-
-    # Prepare data to test the model after training
-    df_test = pd.read_csv('./data/test.csv')
-    test_text_data = df_test.Text.apply(normalizeTweet)
-    test_labels = df_test.Label
-    test_labels = test_labels.replace('INFORMATIVE', 1)
-    test_labels = test_labels.replace('UNINFORMATIVE', 0)
-
-    batch_size = 8
-
-    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
-        test_text_data)
-
-    prediction_inputs: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[0], dim=0)
-    prediction_masks: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[1], dim=0)
-    prediction_labels: torch.tensor = torch.tensor(test_labels)
-
-    # Create the DataLoader.
-    prediction_data = TensorDataset(
-        prediction_inputs, prediction_masks, prediction_labels)
-    prediction_sampler = SequentialSampler(prediction_data)
-    prediction_dataloader = DataLoader(
-        prediction_data, sampler=prediction_sampler, batch_size=batch_size)
-
-    ################# TEST ##################
+def predict(prediction_dataloader, model, prediction_inputs, device) -> Tuple:
     total_eval_accuracy = 0
 
     # Prediction on test set
     print('Predicting labels for {:,} test sentences...'.format(
         len(prediction_inputs)))
     # Put model in evaluation mode
+    model.to(device)
     model.eval()
     # Tracking variables
     predictions, softmax_outputs, true_labels = [], [], []
@@ -197,18 +146,85 @@ def main() -> None:
             softmax_outputs.append(curr_softmax_outputs[i])
             true_labels.append(label_ids[i])
 
-    torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
-    torch.save(true_labels, "./softmax/true_labels.pt")
+    return (predictions, true_labels, softmax_outputs)
 
-    print("  Accuracy: {0:.4f}".format(
-        flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
-    print("  F1-Score: {0:.4f}".format(
-        get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
-    print("Report")
-    print(get_classification_report(np.asarray(
-        true_labels), np.asarray(predictions)))
-    export_wrong_predictions(np.asarray(predictions),
-                             np.asarray(true_labels), df_test)
+
+def vote(predictions_list):
+    result = np.zeros(np.array(predictions_list[0]).shape)
+    for prd in predictions_list:
+        result += np.array(prd)
+    result = 1/4 * result
+    return result
+
+
+def main() -> None:
+    device: torch.device = setup_device()
+
+    # Prepare data to test the model after training
+    df_test = pd.read_csv('./data/test.csv')
+    test_text_data = df_test.Text.apply(normalizeTweet)
+    test_labels = df_test.Label
+    test_labels = test_labels.replace('INFORMATIVE', 1)
+    test_labels = test_labels.replace('UNINFORMATIVE', 0)
+
+    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+        test_text_data)
+
+    prediction_inputs: torch.tensor = torch.cat(
+        input_ids_and_att_masks_tuple[0], dim=0)
+    prediction_masks: torch.tensor = torch.cat(
+        input_ids_and_att_masks_tuple[1], dim=0)
+    prediction_labels: torch.tensor = torch.tensor(test_labels)
+
+    # Create the DataLoader.
+    prediction_data = TensorDataset(
+        prediction_inputs, prediction_masks, prediction_labels)
+    # prediction_sampler = SequentialSampler(prediction_data)
+    prediction_dataloader = DataLoader(
+        prediction_data, batch_size=BATCH_SIZE)
+
+    # Load Models
+    original_BERTweet_model = original_BERTweet()
+    original_BERTweet_model.load_state_dict(
+        torch.load(
+            "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device)
+    )
+
+    global_local_BERTweet_model = global_local_BERTweet()
+    global_local_BERTweet_model.load_state_dict(
+        torch.load(
+            "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
+    )
+
+    last_four_layers_BERTweet_model = last_four_layers_BERTweet()
+    last_four_layers_BERTweet_model.load_state_dict(
+        torch.load(
+            "new_finetune-BERTweet-weights/stage_2_weights.pth", map_location=device)
+    )
+
+    all_embeddings_BERTweet_model = all_embeddings_BERTweet()
+    all_embeddings_BERTweet_model.load_state_dict(
+        torch.load(
+            "finetune-BERTweet-all-embeddings-weights/stage_2_weights.pth", map_location=device)
+    )
+
+    models: List = [
+        original_BERTweet_model,
+        global_local_BERTweet_model,
+        last_four_layers_BERTweet_model,
+        all_embeddings_BERTweet_model,
+    ]
+
+    predictions_list = []
+    true_labels = None
+    for model in models:
+        predictions, true_labels, softmax_outputs = predict(
+            prediction_dataloader, model, prediction_inputs, device)
+        predictions_list.append(predictions)
+
+    temp = vote(predictions_list)
+    print(temp)
+    print(get_classification_report(np.asarray(true_labels), np.asarray(temp)))
 
 
 if __name__ == "__main__":

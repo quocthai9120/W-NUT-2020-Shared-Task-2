@@ -20,14 +20,17 @@ class BERTweetModelForClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=2304,
-                               out_features=2304,
+        self.dense = nn.Linear(in_features=4608,
+                               out_features=4608,
                                )
-        self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=2304,
-                                 out_features=256,
+        self.dropout = nn.Dropout(p=0.15)
+        self.dense_2 = nn.Linear(in_features=4608,
+                                 out_features=1152,
                                  )
-        self.classifier = nn.Linear(in_features=256,
+        self.dense_3 = nn.Linear(in_features=1152,
+                                 out_features=288,
+                                 )
+        self.classifier = nn.Linear(in_features=288,
                                     out_features=self.num_labels,
                                     )
 
@@ -84,7 +87,7 @@ class BERTweetModelForClassification(BertPreTrainedModel):
         labels=None,
     ):
         head_repath_input_ids, head_repath_att_mask, tail_repath_input_ids, tail_repath_att_mask = self.repath_input_ids_and_att_mask(
-            input_ids, attention_mask, head_size=0.7)
+            input_ids, attention_mask, head_size=0.75)
 
         global_outputs = self.bertweet(
             input_ids,
@@ -106,13 +109,18 @@ class BERTweetModelForClassification(BertPreTrainedModel):
 
         sequence_output: torch.tensor = torch.cat((
             global_hidden_states[-1][:, 0, :],
+            global_hidden_states[-2][:, 0, :],
+            global_hidden_states[0][:, 0, :],
+            global_hidden_states[1][:, 0, :],
             head_hidden_states[-1][:, 0, :],
-            tail_hidden_states[-1][:, 0, :],
+            head_hidden_states[0][:, 0, :],
         ), dim=1)
 
         sequence_output = self.dense(sequence_output)
         sequence_output = self.dropout(sequence_output)
         sequence_output = self.dense_2(sequence_output)
+        sequence_output = self.dropout(sequence_output)
+        sequence_output = self.dense_3(sequence_output)
         sequence_output = self.dropout(sequence_output)
 
         logits: torch.tensor = self.classifier(sequence_output)

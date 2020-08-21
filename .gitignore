@@ -8,3 +8,5 @@ finetune-BERTweet-weights/
 temp.py
 finetune-BERTweet-all-embeddings-weights/
 new_finetune-BERTweet-weights/
+bert-large-uncased/
+global-local-BERTweet-weights/
