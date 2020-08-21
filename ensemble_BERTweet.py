@@ -1,8 +1,8 @@
 import torch
-from global_local_BERTweet_model import BERTweetModelForClassification as global_local_BERTweet
+# from global_local_BERTweet_model import BERTweetModelForClassification as global_local_BERTweet
 from BERTweetForBinaryClassification import BERTweetForBinaryClassification as original_BERTweet
-from newBERTweetModel import newBERTweetModelForClassification as last_four_layers_BERTweet
-from BERTweet_all_embeddings_model import BERTweetModelForClassification as all_embeddings_BERTweet
+# from newBERTweetModel import newBERTweetModelForClassification as last_four_layers_BERTweet
+# from BERTweet_all_embeddings_model import BERTweetModelForClassification as all_embeddings_BERTweet
 
 import numpy as np
 import argparse
@@ -21,9 +21,18 @@ from transformers import get_linear_schedule_with_warmup
 import os
 import pandas as pd
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 MAX_LENGTH = 256
 
+def export(filename, predictions):
+    # Write to file here
+    f = open(filename)
+    for i in range(predictions.size):
+        if i==0:
+            f.write("UNINFORMATIVE \n")
+        else:
+            f.write("INFORMATIVE \n")
+    f.close()
 
 def flat_accuracy(preds, labels) -> np.long:
     pred_flat = np.argmax(preds, axis=1).flatten()
@@ -107,6 +116,7 @@ def setup_device() -> torch.device:
     else:
         print('No GPU available, using the CPU instead.')
         return torch.device("cpu")
+
 
 
 def predict(prediction_dataloader, model, prediction_inputs, device) -> Tuple:
@@ -198,36 +208,96 @@ def main() -> None:
         prediction_data, batch_size=BATCH_SIZE)
 
     # Load Models
-    original_BERTweet_model = original_BERTweet()
-    original_BERTweet_model.load_state_dict(
-        torch.load(
-            "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
+    #original_BERTweet_model = original_BERTweet()
+    #original_BERTweet_model.load_state_dict(
+    #    torch.load(
+    #        "finetune-BERTweet-weights/stage_2_weights.pth/stage_2_weights.pth", map_location=device)
+    #)
 
-    global_local_BERTweet_model = global_local_BERTweet()
-    global_local_BERTweet_model.load_state_dict(
-        torch.load(
-            "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
+    BERTweet1 = original_BERTweet()
+    BERTweet1.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-1/stage_2_weights.pth", map_location=device))
+    
 
-    last_four_layers_BERTweet_model = last_four_layers_BERTweet()
-    last_four_layers_BERTweet_model.load_state_dict(
-        torch.load(
-            "new_finetune-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
+    BERTweet2 = original_BERTweet()
+    BERTweet2.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-2/stage_2_weights.pth", map_location=device))
 
-    all_embeddings_BERTweet_model = all_embeddings_BERTweet()
-    all_embeddings_BERTweet_model.load_state_dict(
-        torch.load(
-            "finetune-BERTweet-all-embeddings-weights/stage_2_weights.pth", map_location=device)
-    )
+
+    BERTweet3 = original_BERTweet()
+    BERTweet3.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-3/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet4 = original_BERTweet()
+    BERTweet4.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-4/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet5 = original_BERTweet()
+    BERTweet5.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-5/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet6 = original_BERTweet()
+    BERTweet6.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-6/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet7 = original_BERTweet()
+    BERTweet7.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-7/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet8 = original_BERTweet()
+    BERTweet8.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-8/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet9 = original_BERTweet()
+    BERTweet9.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-9/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet10 = original_BERTweet()
+    BERTweet10.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-10/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet11 = original_BERTweet()
+    BERTweet11.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-11/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet12 = original_BERTweet()
+    BERTweet12.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-12/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet13 = original_BERTweet()
+    BERTweet13.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-13/stage_2_weights.pth", map_location=device))
+
+
+    BERTweet14 = original_BERTweet()
+    BERTweet14.load_state_dict(torch.load("./weights-for-ensembling/BERTweet-14/stage_2_weights.pth", map_location=device))
 
     models: List = [
-        original_BERTweet_model,
-        global_local_BERTweet_model,
-        last_four_layers_BERTweet_model,
-        all_embeddings_BERTweet_model,
+        #original_BERTweet_model,
+        #global_local_BERTweet_model,
+        #last_four_layers_BERTweet_model,
+        #all_embeddings_BERTweet_model,
+        BERTweet1, BERTweet2, BERTweet3, BERTweet4, BERTweet5, BERTweet6, BERTweet7, BERTweet8, BERTweet9, BERTweet10, BERTweet11, BERTweet12, BERTweet13
     ]
+
+
+
+    # global_local_BERTweet_model = global_local_BERTweet()
+    # global_local_BERTweet_model.load_state_dict(
+    #     torch.load(
+    #         "global-local-BERTweet-weights/stage_2_weights.pth/stage_2_weights.pth", map_location=device)
+    # )
+
+    # last_four_layers_BERTweet_model = last_four_layers_BERTweet()
+    # last_four_layers_BERTweet_model.load_state_dict(
+    #     torch.load(
+    #         "new_finetune-BERTweet-weights/stage_2_weights.pth/stage_2_weights.pth", map_location=device)
+    # )
+
+    # all_embeddings_BERTweet_model = all_embeddings_BERTweet()
+    # all_embeddings_BERTweet_model.load_state_dict(
+    #     torch.load(
+    #         "finetune-BERTweet-all-embeddings-weights/stage_2_weights.pth/stage_2_weights.pth", map_location=device)
+    # )
+
+
 
     predictions_list = []
     true_labels = None
@@ -243,6 +313,14 @@ def main() -> None:
         predictions_list)
     print(get_classification_report(np.asarray(true_labels),
                                     np.asarray(major_voting_ensembling_predictions), flattened=True))
+    
+
+    fileavg = "./avg-predictions.txt"
+    filemajor = "./major-predictions.txt" 
+
+    export(fileavg, average_ensembling_predictions)
+    export(filemajor, major_voting_ensembling_predictions)
+
 
 
 if __name__ == "__main__":

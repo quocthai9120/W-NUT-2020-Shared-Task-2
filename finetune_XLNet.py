@@ -132,16 +132,11 @@ val_size = len(dataset) - train_size
 # Divide the dataset by randomly selecting samples.
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-#print('{:>5,} training samples'.format(train_size))
-#print('{:>5,} validation samples'.format(val_size))
-# 6,300 training samples
-#  700 validation samples
-
 
 # The DataLoader needs to know our batch size for training, so we specify it
 # here. For fine-tuning BERT on a specific task, the authors recommend a batch
 # size of 16 or 32.
-batch_size = 8
+batch_size = 16
 
 # Create the DataLoaders for our training and validation sets.
 # We'll take training samples in random order.
@@ -175,7 +170,7 @@ model.cuda()
 # Note: AdamW is a class from the huggingface library (as opposed to pytorch)
 # I believe the 'W' stands for 'Weight Decay fix"
 optimizer = AdamW(model.parameters(),
-                  lr=2e-6,  # args.learning_rate - default is 5e-5, our notebook had 2e-5
+                  lr=2e-5,  # args.learning_rate - default is 5e-5, our notebook had 2e-5
                   eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                   )
 
