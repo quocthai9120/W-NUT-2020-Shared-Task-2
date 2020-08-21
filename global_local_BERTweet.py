@@ -111,7 +111,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./finetune-BERTweet-weights"
+    model_weights = "./global-local-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -132,6 +132,8 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
     model.dense.bias.requires_grad = True
     model.dense_2.weight.requires_grad = True
     model.dense_2.bias.requires_grad = True
+    model.dense_3.weight.requires_grad = True
+    model.dense_3.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     if device == torch.device("cuda"):
@@ -139,7 +141,7 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=10e-5,  # args.learning_rate - default is 5e-5
+                      lr=5e-4,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
     EPOCHS: int = EPOCHS
@@ -362,7 +364,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=3e-5,  # args.learning_rate - default is 5e-5
+                      lr=5e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
@@ -649,9 +651,9 @@ def main():
     ######################################## Initiate Model ########################################
     model = BERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=10)
+                     validation_dataloader, device, EPOCHS=8)
     # model.load_state_dict(torch.load(
-    #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    #     "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=6)
 
