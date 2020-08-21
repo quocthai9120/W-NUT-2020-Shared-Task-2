@@ -19,11 +19,11 @@ class BERTweetModelForClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=3072,
-                               out_features=1536,
+        self.dense = nn.Linear(in_features=1536,
+                               out_features=768,
                                )
         self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=1536,
+        self.dense_2 = nn.Linear(in_features=768,
                                  out_features=256,
                                  )
         self.classifier = nn.Linear(in_features=256,

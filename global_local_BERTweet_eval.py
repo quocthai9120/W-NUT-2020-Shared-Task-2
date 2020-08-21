@@ -74,7 +74,8 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (3) Map tokens to IDs
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + bpe.encode(line) + ' </s>'  # (1) + (2)
+        subwords: str = '<s> ' + \
+            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -128,12 +129,12 @@ def main() -> None:
 
     model = BERTweetModelForClassification()
     model.load_state_dict(torch.load(
-        "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
+        "data_join_global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
     model.cuda()
 
     # Prepare data to test the model after training
-    df_test = pd.read_csv('./data/test.csv')
+    df_test = pd.read_csv('./data_join/test.csv')
     test_text_data = df_test.Text.apply(normalizeTweet)
     test_labels = df_test.Label
     test_labels = test_labels.replace('INFORMATIVE', 1)

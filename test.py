@@ -1,8 +1,8 @@
 import torch
 from BERTweetForBinaryClassification import BERTweetForBinaryClassification as original_BERTweet
-from last_4_layers_BERTweet_model import BERTweetModelForClassification as last_four_layers_BERTweet
-from last_2_layers_BERTweet_model import BERTweetModelForClassification as last_two_layers_BERTweet
-from global_local_BERTweet_model import BERTweetModelForClassification as global_local_BERTweet
+# from last_4_layers_BERTweet_model import BERTweetModelForClassification as last_four_layers_BERTweet
+# from last_2_layers_BERTweet_model import BERTweetModelForClassification as last_two_layers_BERTweet
+# from global_local_BERTweet_model import BERTweetModelForClassification as global_local_BERTweet
 
 import numpy as np
 import argparse
@@ -210,7 +210,7 @@ def average_ensembling(predictions_list):
     for preds in predictions_list:
         result += np.array(preds)
     result = result / num_models
-    return np.argmax(result, axis=1).flatten()
+    return result
 
 
 def major_voting_ensembling(predictions_list):
@@ -227,7 +227,7 @@ def main() -> None:
     device: torch.device = setup_device()
 
     # Prepare data to test the model after training
-    df_test = pd.read_csv('./data_join/test.csv')
+    df_test = pd.read_csv('./data/test.csv')
     test_text_data = df_test.Text.apply(normalizeTweet)
     test_labels = df_test.Label
     test_labels = test_labels.replace('INFORMATIVE', 1)
@@ -250,30 +250,6 @@ def main() -> None:
         prediction_data, batch_size=BATCH_SIZE)
 
     # Load Models
-    original_BERTweet_model = original_BERTweet()
-    original_BERTweet_model.load_state_dict(
-        torch.load(
-            "data_join-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
-
-    # last_two_layers_BERTweet_model = last_two_layers_BERTweet()
-    # last_two_layers_BERTweet_model.load_state_dict(
-    #     torch.load(
-    #         "last_2_layers-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    # )
-
-    last_four_layers_BERTweet_model = last_four_layers_BERTweet()
-    last_four_layers_BERTweet_model.load_state_dict(
-        torch.load(
-            "last_4_layers-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
-
-    global_local_BERTweet_model = global_local_BERTweet()
-    global_local_BERTweet_model.load_state_dict(
-        torch.load(
-            "data_join_global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
-
     BERTweet1 = original_BERTweet()
     BERTweet1.load_state_dict(torch.load(
         "./weights-for-ensembling/BERTweet-1/stage_2_weights.pth", map_location=device))
@@ -331,12 +307,7 @@ def main() -> None:
         "./weights-for-ensembling/BERTweet-14/stage_2_weights.pth", map_location=device))
 
     models: List = [
-        original_BERTweet_model,
-        global_local_BERTweet_model,
-        last_four_layers_BERTweet_model,
-        # last_two_layers_BERTweet_model,
-        # all_embeddings_BERTweet_model,
-        BERTweet1, BERTweet2, BERTweet3, BERTweet4, BERTweet5, BERTweet6, BERTweet7, BERTweet8, BERTweet9, BERTweet10, BERTweet11, BERTweet12, BERTweet13
+        BERTweet1
     ]
 
     predictions_list = []
@@ -348,48 +319,11 @@ def main() -> None:
 
     average_ensembling_predictions = average_ensembling(predictions_list)
     print(get_classification_report(np.asarray(true_labels),
-                                    np.asarray(average_ensembling_predictions), flattened=True))
+                                    np.asarray(average_ensembling_predictions)))
     major_voting_ensembling_predictions = major_voting_ensembling(
         predictions_list)
     print(get_classification_report(np.asarray(true_labels),
                                     np.asarray(major_voting_ensembling_predictions), flattened=True))
-
- ###### FINAL TEST ####################
-    # Prepare data to test the model after training
-    df_final_test = pd.read_csv('./data/final_test.csv')
-    final_test_text_data = df_final_test.Text.apply(normalizeTweet)
-
-    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
-        final_test_text_data)
-
-    prediction_inputs: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[0], dim=0)
-    prediction_masks: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[1], dim=0)
-
-    # Create the DataLoader.
-    prediction_data = TensorDataset(
-        prediction_inputs, prediction_masks)
-    # prediction_sampler = SequentialSampler(prediction_data)
-    prediction_dataloader = DataLoader(
-        prediction_data, batch_size=BATCH_SIZE)
-
-    predictions_list = []
-    true_labels = None
-    for model in models:
-        predictions, softmax_outputs = final_test_predict(
-            prediction_dataloader, model, prediction_inputs, device)
-        predictions_list.append(predictions)
-
-    average_ensembling_predictions = average_ensembling(predictions_list)
-    major_voting_ensembling_predictions = major_voting_ensembling(
-        predictions_list)
-
-    fileavg = "./avg-predictions.txt"
-    filemajor = "./major-predictions.txt"
-
-    export(fileavg, average_ensembling_predictions)
-    export(filemajor, major_voting_ensembling_predictions)
 
 
 if __name__ == "__main__":
