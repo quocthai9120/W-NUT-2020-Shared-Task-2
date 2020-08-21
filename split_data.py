@@ -17,8 +17,18 @@ print(df_train.shape)
 df_valid = pd.read_csv('./data/valid.csv')
 print(df_valid.shape)
 
+<<<<<<< HEAD
+df_test = pd.read_csv('./data/final_test.tsv', sep='\t')
+df_final_test = df_test['Label']
+df_final_test = pd.DataFrame(data=df_final_test)
+print(df_final_test)
+print(df_final_test.size)
+df_final_test.to_csv(path_or_buf="./data/final_test.csv", index=False)
+exit()
+=======
 df_test = pd.read_csv('./data/test.csv')
 print(df_test.shape)
+>>>>>>> 5d4890fa392802b267b530176cd988b0b17cc54f
 
 df_total1 = pd.concat([df_train, df_valid], ignore_index=True)
 df_total = pd.concat([df_total1, df_test], ignore_index=True)

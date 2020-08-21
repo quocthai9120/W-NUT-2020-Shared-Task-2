@@ -11,4 +11,8 @@ new_finetune-BERTweet-weights/
 bert-large-uncased/
 global-local-BERTweet-weights/
 data_join-finetune-BERTweet-weights/
+last_2_layers-BERTweet-weights/
+last_4_layers-BERTweet-weights/
+data_join_global-local-BERTweet-weights/
+softmax/
 weights-for-ensembling/

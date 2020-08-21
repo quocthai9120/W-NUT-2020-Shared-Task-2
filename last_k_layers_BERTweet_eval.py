@@ -129,7 +129,7 @@ def main() -> None:
 
     model = BERTweetModelForClassification()
     model.load_state_dict(torch.load(
-        "last_2_layers-BERTweet-weights/stage_2_weights.pth", map_location=device))
+        "last_4_layers-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
     model.cuda()
 
