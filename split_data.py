@@ -15,8 +15,13 @@ df_train = df_train[pd.notnull(df_train['Label'])]
 
 #print("Number of instances in the dataframe is {}".format(df_train['Label'].value_counts()))
 
-df_test = pd.read_csv('./test.tsv', sep='\t')
-df_test = df_test[pd.notnull(df_test['Label'])]
+df_test = pd.read_csv('./data/final_test.tsv', sep='\t')
+df_final_test = df_test['Label']
+df_final_test = pd.DataFrame(data=df_final_test)
+print(df_final_test)
+print(df_final_test.size)
+df_final_test.to_csv(path_or_buf="./data/final_test.csv", index=False)
+exit()
 
 X_train, X_valid, y_train, y_valid = train_test_split(
     df_train['Text'], df_train['Label'], train_size=0.9, random_state=RANDOM_STATE)

@@ -112,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./last_2_layers-BERTweet-weights"
+    model_weights = "./last_4_layers-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -654,7 +654,7 @@ def main():
     # model.load_state_dict(torch.load(
     #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=5)
+                     validation_dataloader, device, EPOCHS=6)
 
 
 if __name__ == "__main__":

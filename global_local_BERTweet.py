@@ -20,7 +20,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 32
+BATCH_SIZE: int = 16
 
 
 def format_time(elapsed) -> str:
@@ -84,7 +84,8 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (3) Map tokens to IDs
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + bpe.encode(line) + ' </s>'  # (1) + (2)
+        subwords: str = '<s> ' + \
+            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -111,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./global-local-BERTweet-weights"
+    model_weights = "./data_join_global-local-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -141,7 +142,7 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=5e-4,  # args.learning_rate - default is 5e-5
+                      lr=10e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
     EPOCHS: int = EPOCHS
@@ -364,7 +365,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=5e-5,  # args.learning_rate - default is 5e-5
+                      lr=4e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
@@ -589,8 +590,8 @@ def main():
 
     ######################################## Prepare Data ########################################
     # Prepare train data
-    df_train: pd.DataFrame = pd.read_csv('./data/train.csv')
-    df_valid: pd.DataFrame = pd.read_csv('./data/valid.csv')
+    df_train: pd.DataFrame = pd.read_csv('./data_join/train.csv')
+    df_valid: pd.DataFrame = pd.read_csv('./data_join/test.csv')
 
     # Normalizing the tweets
     df_train['Text'] = df_train['Text'].apply(normalizeTweet)
@@ -651,9 +652,9 @@ def main():
     ######################################## Initiate Model ########################################
     model = BERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=8)
+                     validation_dataloader, device, EPOCHS=12)
     # model.load_state_dict(torch.load(
-    #     "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    #     "data_join_global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=6)
 
