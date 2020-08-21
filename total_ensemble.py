@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 # Hey, add your softmax output directory here
-softmax_path = "/home/ubuntu/W-NUT-2020-Shared-Task-2/export"
+softmax_path = "./export"
 
 listtovote = []
 # Enumerate all softmax output files
