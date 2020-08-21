@@ -210,7 +210,7 @@ def average_ensembling(predictions_list):
     for preds in predictions_list:
         result += np.array(preds)
     result = result / num_models
-    return result
+    return np.argmax(result, axis=1).flatten()
 
 
 def major_voting_ensembling(predictions_list):
@@ -348,7 +348,7 @@ def main() -> None:
 
     average_ensembling_predictions = average_ensembling(predictions_list)
     print(get_classification_report(np.asarray(true_labels),
-                                    np.asarray(average_ensembling_predictions)))
+                                    np.asarray(average_ensembling_predictions), flattened=True))
     major_voting_ensembling_predictions = major_voting_ensembling(
         predictions_list)
     print(get_classification_report(np.asarray(true_labels),

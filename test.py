@@ -307,7 +307,7 @@ def main() -> None:
         "./weights-for-ensembling/BERTweet-14/stage_2_weights.pth", map_location=device))
 
     models: List = [
-        BERTweet1, BERTweet2, BERTweet3, BERTweet4, BERTweet5, BERTweet6, BERTweet7, BERTweet8, BERTweet9, BERTweet10, BERTweet11, BERTweet12, BERTweet13
+        BERTweet1
     ]
 
     predictions_list = []
