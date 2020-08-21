@@ -185,7 +185,7 @@ valid_dataset = TensorDataset(input_ids, attention_masks, valid_labels)
 # The DataLoader needs to know our batch size for training, so we specify it
 # here. For fine-tuning BERT on a specific task, the authors recommend a batch
 # size of 16 or 32.
-batch_size = 32
+batch_size = 8
 
 # Create the DataLoaders for our training and validation sets.
 # We'll take training samples in random order.
@@ -205,9 +205,14 @@ validation_dataloader = DataLoader(
 
 # Load BertForSequenceClassification, the pretrained BERT model with a single
 # linear classification layer on top.
+config = BertConfig.from_pretrained(
+    "./bert-large-uncased/config.json",
+    output_hidden_states=True,
+)
 model = BertForSequenceClassification.from_pretrained(
-    # Use the 12-layer BERT model, with an uncased vocab.
-    "bert-large-uncased",
+    # Use the 24-layer BERT model, with an uncased vocab.
+    "./bert-large-uncased/bert-large-uncased-pytorch_model.bin",
+    config=config,
     num_labels=2,  # The number of output labels--2 for binary classification.
     # You can increase this for multi-class tasks.
     output_attentions=False,  # Whether the model returns attentions weights.
