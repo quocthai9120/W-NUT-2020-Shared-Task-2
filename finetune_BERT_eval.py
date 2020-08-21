@@ -31,11 +31,13 @@ def get_f1_score(preds, labels):
     labels_flat = labels.flatten()
     return f1_score(pred_flat, labels_flat)
 
+
 def get_classification_report(labels, preds):
     pred_flat = np.argmax(preds, axis=1).flatten()
     labels_flat = labels.flatten()
     #my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
     return classification_report(labels_flat, pred_flat)
+
 
 # If there's a GPU available...
 if torch.cuda.is_available():
@@ -145,4 +147,4 @@ print("  F1-Score: {0:.2f}".format(
     get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
 print("Report")
 print(get_classification_report(np.asarray(
-        true_labels), np.asarray(predictions)))
+    true_labels), np.asarray(predictions)))

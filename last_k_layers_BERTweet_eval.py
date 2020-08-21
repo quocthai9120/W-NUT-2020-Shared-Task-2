@@ -23,7 +23,7 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
-from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+from last_k_layers_BERTweet_model import BERTweetModelForClassification
 
 
 MAX_LENGTH = 256
@@ -74,8 +74,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (3) Map tokens to IDs
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + \
-            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
+        subwords: str = '<s> ' + bpe.encode(line) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -108,7 +107,7 @@ def export_wrong_predictions(preds: np.array, labels: np.array, data: pd.DataFra
         if pred_flat[i] != labels_flat[i]:
             wrong_pred_index.append(i)
     filtered_data = data[data.index.isin(wrong_pred_index)]
-    filtered_data.to_csv('finetune_BERTweet_wrong_preds.csv')
+    filtered_data.to_csv('new_finetune_BERTweet_wrong_preds.csv')
 
 
 def main() -> None:
@@ -127,9 +126,9 @@ def main() -> None:
         print('No GPU available, using the CPU instead.')
         device = torch.device("cpu")
 
-    model = BERTweetForBinaryClassification()
+    model = BERTweetModelForClassification()
     model.load_state_dict(torch.load(
-        "data_join-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+        "last_2_layers-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
     model.cuda()
 

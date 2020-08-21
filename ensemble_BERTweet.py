@@ -37,8 +37,11 @@ def get_f1_score(preds, labels) -> np.long:
     return f1_score(labels_flat, pred_flat)
 
 
-def get_classification_report(labels, preds):
-    pred_flat = np.argmax(preds, axis=1).flatten()
+def get_classification_report(labels, preds, flattened=False):
+    if not flattened:
+        pred_flat = np.argmax(preds, axis=1).flatten()
+    else:
+        pred_flat = preds
     labels_flat = labels.flatten()
     return classification_report(labels_flat, pred_flat, digits=4)
 
@@ -149,11 +152,22 @@ def predict(prediction_dataloader, model, prediction_inputs, device) -> Tuple:
     return (predictions, true_labels, softmax_outputs)
 
 
-def vote(predictions_list):
+def average_ensembling(predictions_list):
+    num_models: int = len(predictions_list)
     result = np.zeros(np.array(predictions_list[0]).shape)
-    for prd in predictions_list:
-        result += np.array(prd)
-    result = 1/4 * result
+    for preds in predictions_list:
+        result += np.array(preds)
+    result = result / num_models
+    return result
+
+
+def major_voting_ensembling(predictions_list):
+    num_models: int = len(predictions_list)
+    result = np.zeros(np.argmax(predictions_list[0], axis=1).flatten().shape)
+    for preds in predictions_list:
+        pred_flat = np.argmax(preds, axis=1).flatten()
+        result += np.array(pred_flat)
+    result = np.where(result <= (num_models / 2), 0, 1)
     return result
 
 
@@ -222,9 +236,13 @@ def main() -> None:
             prediction_dataloader, model, prediction_inputs, device)
         predictions_list.append(predictions)
 
-    temp = vote(predictions_list)
-    print(temp)
-    print(get_classification_report(np.asarray(true_labels), np.asarray(temp)))
+    average_ensembling_predictions = average_ensembling(predictions_list)
+    print(get_classification_report(np.asarray(true_labels),
+                                    np.asarray(average_ensembling_predictions)))
+    major_voting_ensembling_predictions = major_voting_ensembling(
+        predictions_list)
+    print(get_classification_report(np.asarray(true_labels),
+                                    np.asarray(major_voting_ensembling_predictions), flattened=True))
 
 
 if __name__ == "__main__":

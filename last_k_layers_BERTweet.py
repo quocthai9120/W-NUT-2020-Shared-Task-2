@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+from last_k_layers_BERTweet_model import BERTweetModelForClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -84,8 +84,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (3) Map tokens to IDs
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + \
-            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
+        subwords: str = '<s> ' + bpe.encode(line) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -112,7 +111,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./data_join-finetune-BERTweet-weights"
+    model_weights = "./last_2_layers-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -648,13 +647,13 @@ def main():
     )
 
     ######################################## Initiate Model ########################################
-    model = BERTweetForBinaryClassification()
+    model = BERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=10)
     # model.load_state_dict(torch.load(
-    #     "data_join-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=6)
+                     validation_dataloader, device, EPOCHS=5)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from typing import Tuple
 import torch
 
 
-class BERTweetForBinaryClassification(BertPreTrainedModel):
+class BERTweetModelForClassification(BertPreTrainedModel):
     base_model_prefix = "roberta"
 
     def __init__(self):
@@ -19,14 +19,14 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=768,
-                               out_features=128,
+        self.dense = nn.Linear(in_features=1536,
+                               out_features=768,
                                )
         self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=128,
-                                 out_features=64,
+        self.dense_2 = nn.Linear(in_features=768,
+                                 out_features=256,
                                  )
-        self.classifier = nn.Linear(in_features=64,
+        self.classifier = nn.Linear(in_features=256,
                                     out_features=self.num_labels,
                                     )
 
@@ -42,7 +42,13 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
         )
         # Take <CLS> token for Native Layer Norm Backward
         hidden_states: Tuple[torch.tensor] = outputs[2]
-        sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
+        last_sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
+        second_to_last_sequence_output: torch.tensor = hidden_states[-2][:, 0, :]
+
+        sequence_output: torch.tensor = torch.cat((
+            last_sequence_output,
+            second_to_last_sequence_output,
+        ), dim=1)
 
         sequence_output = self.dense(sequence_output)
         sequence_output = self.dropout(sequence_output)
