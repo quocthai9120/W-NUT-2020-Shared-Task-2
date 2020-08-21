@@ -147,4 +147,13 @@ print("  F1-Score: {0:.2f}".format(
     get_f1_score(np.asarray(predictions), np.asarray(true_labels))))
 print("Report")
 print(get_classification_report(np.asarray(
-    true_labels), np.asarray(predictions)))
+        true_labels), np.asarray(predictions)))
+
+# Write to file here
+f = open("/result-on-test/predictions1.txt")
+for i in range(length(predictions)):
+    if i==0:
+        f.write("UNINFORMATIVE \n")
+    else:
+        f.write("INFORMATIVE \n")
+f.close()
