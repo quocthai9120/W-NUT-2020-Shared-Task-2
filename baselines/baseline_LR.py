@@ -61,3 +61,12 @@ my_tags = ('INFORMATIVE', 'UNINFORMATIVE')
 
 print('accuracy %s' % accuracy_score(y_pred, y_test))
 print(classification_report(y_test, y_pred, target_names=my_tags))
+
+# Write to file here
+f = open(filename)
+for i in range(preds.size):
+    if i==0:
+        f.write("UNINFORMATIVE \n")
+    else:
+        f.write("INFORMATIVE \n")
+f.close()
