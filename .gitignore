@@ -16,3 +16,5 @@ last_4_layers-BERTweet-weights/
 data_join_global-local-BERTweet-weights/
 softmax/
 weights-for-ensembling/
+last_2_mid_2-BERTweet-weights/
+last_12_layers-BERTweet-weights/
