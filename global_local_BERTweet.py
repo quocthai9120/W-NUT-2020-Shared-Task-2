@@ -112,14 +112,14 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./data_join_global-local-BERTweet-weights"
+    model_weights = "./more_data_join_global-local-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
         os.makedirs(model_weights)
 
     print("Saving model to %s" % (model_weights + file_name))
-    torch.save(model.state_dict(), model_weights + file_name)
+    torch.save(model, model_weights + file_name)
 
 
 def stage_1_training(model, train_dataloader, validation_dataloader, device, EPOCHS) -> None:

@@ -44,14 +44,10 @@ class BERTweetModelForClassification(BertPreTrainedModel):
         hidden_states: Tuple[torch.tensor] = outputs[2]
         last_sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
         second_to_last_sequence_output: torch.tensor = hidden_states[-2][:, 0, :]
-        third_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]
-        fourth_to_last_sequence_output: torch.tensor = hidden_states[-4][:, 0, :]
 
         sequence_output: torch.tensor = torch.cat((
             last_sequence_output,
-            second_to_last_sequence_output,
-            third_to_last_sequence_output,
-            fourth_to_last_sequence_output
+            second_to_last_sequence_output
         ), dim=1)
 
         sequence_output = self.dense(sequence_output)

@@ -3,7 +3,6 @@ from torch.nn import CrossEntropyLoss
 from torch import nn
 from typing import Tuple
 import torch
-import torch.nn.functional as F
 
 
 class BERTweetForBinaryClassification(BertPreTrainedModel):
@@ -45,12 +44,12 @@ class BERTweetForBinaryClassification(BertPreTrainedModel):
         hidden_states: Tuple[torch.tensor] = outputs[2]
         sequence_output: torch.tensor = hidden_states[-1][:, 0, :]
 
-        sequence_output = F.relu(self.dense(sequence_output))
+        sequence_output = self.dense(sequence_output)
         sequence_output = self.dropout(sequence_output)
-        sequence_output = F.relu(self.dense_2(sequence_output))
+        sequence_output = self.dense_2(sequence_output)
         sequence_output = self.dropout(sequence_output)
 
-        logits: torch.tensor = F.sigmoid(self.classifier(sequence_output))
+        logits: torch.tensor = self.classifier(sequence_output)
         outputs = (logits,)
         if labels is not None:
             loss_function = CrossEntropyLoss()

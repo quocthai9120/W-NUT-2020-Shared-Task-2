@@ -112,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./finetune-BERTweet-weights"
+    model_weights = "./data_join-finetune-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):

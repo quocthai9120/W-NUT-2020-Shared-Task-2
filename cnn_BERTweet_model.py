@@ -20,13 +20,13 @@ class BERTweetModelForClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-
-        # CAN YOU ADD A CNN LAYER HERE?
-        self.dense = nn.Linear(in_features=767,
-                               out_features=128,
+        self.cnn = nn.Conv2d(1, 8, 3)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dense = nn.Linear(in_features=15320,
+                               out_features=1024,
                                )
         self.dropout = nn.Dropout(p=0.2)
-        self.classifier = nn.Linear(in_features=128,
+        self.classifier = nn.Linear(in_features=1024,
                                     out_features=self.num_labels,
                                     )
 
@@ -70,6 +70,10 @@ class BERTweetModelForClassification(BertPreTrainedModel):
             first_sequence_output
         ), dim=1)
 
+        sequence_output = sequence_output.unsqueeze(1)
+
+        sequence_output = self.pool(F.relu(self.cnn(sequence_output)))
+        sequence_output = sequence_output.view(-1, 15320)
         sequence_output = F.relu(self.dense(sequence_output))
         sequence_output = self.dropout(sequence_output)
 
