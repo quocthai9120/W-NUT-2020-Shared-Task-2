@@ -28,9 +28,9 @@ class BERTweetModelForClassification(BertPreTrainedModel):
                                  out_features=512,
                                  )
         self.dense_3 = nn.Linear(in_features=512,
-                                 out_features=128,
+                                 out_features=256,
                                  )
-        self.classifier = nn.Linear(in_features=128,
+        self.classifier = nn.Linear(in_features=256,
                                     out_features=self.num_labels,
                                     )
 
@@ -110,10 +110,10 @@ class BERTweetModelForClassification(BertPreTrainedModel):
         sequence_output: torch.tensor = torch.cat((
             global_hidden_states[-1][:, 0, :],
             global_hidden_states[-2][:, 0, :],
-            global_hidden_states[-3][:, 0, :],
-            global_hidden_states[-4][:, 0, :],
-            (global_hidden_states[0][:, 0, :] +
-             global_hidden_states[1][:, 0, :]) / 2.0,
+            global_hidden_states[-5][:, 0, :],
+            global_hidden_states[-6][:, 0, :],
+            (global_hidden_states[1][:, 0, :] +
+             global_hidden_states[2][:, 0, :]) / 2.0,
             head_hidden_states[5][:, 0, :],
             head_hidden_states[0][:, 0, :],
             tail_hidden_states[0][:, 0, :]
