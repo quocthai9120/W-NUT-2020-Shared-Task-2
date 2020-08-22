@@ -30,13 +30,16 @@ MAX_LENGTH = 256
 def export(filename, predictions):
     # Write to file here
     f = open(filename, "w")
+    count = 0
     for i in range(predictions.size):
         if predictions[i] == 0 or predictions[i] == '0':
-            f.write("UNINFORMATIVE \n")
+            f.write("UNINFORMATIVE\n")
         elif predictions[i] == 1 or predictions[i] == '1':
-            f.write("INFORMATIVE \n")
+            f.write("INFORMATIVE\n")
         else:
             print(predictions[i])
+            count += 1
+    print(count)
     f.close()
 
 

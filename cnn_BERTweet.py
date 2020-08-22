@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+from cnn_BERTweet_model import BERTweetModelForClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -20,7 +20,7 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 16
+BATCH_SIZE: int = 32
 
 
 def format_time(elapsed) -> str:
@@ -112,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./finetune-BERTweet-weights"
+    model_weights = "./finetune-BERTweet-all-embeddings-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -124,15 +124,16 @@ def save_model_weights(model, file_name: str) -> None:
 
 def stage_1_training(model, train_dataloader, validation_dataloader, device, EPOCHS) -> None:
     ######################################## Freeze BERTweet for stage 1 training ########################################
-    for _, param in model.named_parameters():
+    for name, param in model.named_parameters():
+        # print(name)
         param.requires_grad = False
 
     model.classifier.weight.requires_grad = True
     model.classifier.bias.requires_grad = True
     model.dense.weight.requires_grad = True
     model.dense.bias.requires_grad = True
-    model.dense_2.weight.requires_grad = True
-    model.dense_2.bias.requires_grad = True
+    model.cnn.weight.requires_grad = True
+    model.cnn.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     if device == torch.device("cuda"):
@@ -363,7 +364,7 @@ def stage_2_training(model, train_dataloader, validation_dataloader, device, EPO
 
     ######################################## Setup Optimizer ########################################
     optimizer = AdamW(model.parameters(),
-                      lr=4e-5,  # args.learning_rate - default is 5e-5
+                      lr=3e-5,  # args.learning_rate - default is 5e-5
                       eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                       )
 
@@ -588,8 +589,8 @@ def main():
 
     ######################################## Prepare Data ########################################
     # Prepare train data
-    df_train: pd.DataFrame = pd.read_csv('./data_join/train.csv')
-    df_valid: pd.DataFrame = pd.read_csv('./data_join/test.csv')
+    df_train: pd.DataFrame = pd.read_csv('./data/train.csv')
+    df_valid: pd.DataFrame = pd.read_csv('./data/valid.csv')
 
     # Normalizing the tweets
     df_train['Text'] = df_train['Text'].apply(normalizeTweet)
@@ -648,13 +649,13 @@ def main():
     )
 
     ######################################## Initiate Model ########################################
-    model = BERTweetForBinaryClassification()
+    model = BERTweetModelForClassification()
     stage_1_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=10)
     # model.load_state_dict(torch.load(
-    #     "data_join-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=6)
+                     validation_dataloader, device, EPOCHS=5)
 
 
 if __name__ == "__main__":

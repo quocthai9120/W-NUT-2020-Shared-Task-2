@@ -4,9 +4,14 @@ import torch
 
 def count_informative_labels(preds, col):
     count = 0
+    neg_count = 0
     for i in range(len(preds)):
-        if preds[col].values[i] == 'INFORMATIVE ':
+        if preds[col].values[i] == 'INFORMATIVE':
             count += 1
+        elif preds[col].values[i] == 'UNINFORMATIVE':
+            neg_count += 1
+        else:
+            print(bug)
     return count
 
 
