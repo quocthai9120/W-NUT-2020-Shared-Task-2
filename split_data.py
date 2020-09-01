@@ -12,6 +12,7 @@ def tweet_length(dataframe):
         word_arr.append(len(line.split()))
     dataframe['Num_words'] = word_arr
 
+def ... classify into 3 classes
 
 # Read data in
 df_train = pd.read_csv('./data/train.csv')
