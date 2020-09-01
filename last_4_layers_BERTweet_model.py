@@ -19,11 +19,11 @@ class BERTweetModelForClassification(BertPreTrainedModel):
             "./BERTweet_base_transformers/model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=3072,
-                               out_features=1536,
+        self.dense = nn.Linear(in_features=768 * 6,
+                               out_features=1024,
                                )
-        self.dropout = nn.Dropout(p=0.2)
-        self.dense_2 = nn.Linear(in_features=1536,
+        self.dropout = nn.Dropout(p=0.15)
+        self.dense_2 = nn.Linear(in_features=1024,
                                  out_features=256,
                                  )
         self.classifier = nn.Linear(in_features=256,
@@ -46,12 +46,16 @@ class BERTweetModelForClassification(BertPreTrainedModel):
         second_to_last_sequence_output: torch.tensor = hidden_states[-2][:, 0, :]
         third_to_last_sequence_output: torch.tensor = hidden_states[-3][:, 0, :]
         fourth_to_last_sequence_output: torch.tensor = hidden_states[-4][:, 0, :]
+        second_sequence_output: torch.tensor = hidden_states[1][:, 0, :]
+        first_sequence_output: torch.tensor = hidden_states[0][:, 0, :]
 
         sequence_output: torch.tensor = torch.cat((
             last_sequence_output,
             second_to_last_sequence_output,
             third_to_last_sequence_output,
-            fourth_to_last_sequence_output
+            fourth_to_last_sequence_output,
+            second_sequence_output,
+            first_sequence_output
         ), dim=1)
 
         sequence_output = self.dense(sequence_output)
