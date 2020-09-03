@@ -88,7 +88,8 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (3) Map tokens to IDs
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + bpe.encode(line) + ' </s>'  # (1) + (2)
+        subwords: str = '<s> ' + \
+            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -260,41 +261,17 @@ def main() -> None:
 
     # Load Models
     print("Loading Models")
-    original_BERTweet_model = original_BERTweet()
-    original_BERTweet_model.load_state_dict(
-        torch.load(
-            "data_join-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
+    # one_for_all_BERTweet_model = torch.load(
+    #     "one_for_all-BERTweet-weights/stage_2_weights.pth", map_location=device)
 
-    last_two_layers_BERTweet_model = last_two_layers_BERTweet()
-    last_two_layers_BERTweet_model.load_state_dict(
-        torch.load(
-            "last_2_layers-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
+    # last_two_layers_BERTweet_model = last_two_layers_BERTweet()
+    # last_two_layers_BERTweet_model.load_state_dict(
+    #     torch.load(
+    #         "last_2_layers-BERTweet-weights/stage_2_weights.pth", map_location=device)
+    # )
 
-    last_12_layers_BERTweet_model = last_12_layers_BERTweet()
-    last_12_layers_BERTweet_model.load_state_dict(
-        torch.load(
-            "last_12_layers-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
-
-    last_2_mid_2_BERTweet_model = last_2_mid_2_BERTweet()
-    last_2_mid_2_BERTweet_model.load_state_dict(
-        torch.load(
-            "last_2_mid_2-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
-
-    last_four_layers_BERTweet_model = last_four_layers_BERTweet()
-    last_four_layers_BERTweet_model.load_state_dict(
-        torch.load(
-            "last_4_layers-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
-
-    global_local_BERTweet_model = global_local_BERTweet()
-    global_local_BERTweet_model.load_state_dict(
-        torch.load(
-            "data_join_global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    )
+    # global_local_BERTweet_model = torch.load(
+    #     "more_data_join_global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
 
     # BERTweet1 = original_BERTweet()
     # BERTweet1.load_state_dict(torch.load(
@@ -356,8 +333,16 @@ def main() -> None:
     # BERTweet15.load_state_dict(torch.load(
     #     "./weights-for-ensembling/BERTweet-15/stage_2_weights.pth", map_location=device))
 
+    # last_4_layers_BERTweet_model = last_four_layers_BERTweet()
+    # last_4_layers_BERTweet_model.load_state_dict(torch.load(
+    #     "more_last_4_layers-BERTweet-weights-2/stage_2_weights.pth", map_location=device))
     models: List = [
-        original_BERTweet_model,
+        # last_4_layers_BERTweet_model,
+        torch.load(
+            "one_for_all-BERTweet-weights/stage_2_weights.pth", map_location=device),
+        # one_for_all_BERTweet_model,
+        # last_two_layers_BERTweet_model,
+        # global_local_BERTweet_model
         # last_two_layers_BERTweet_model,
         # last_four_layers_BERTweet_model,
         # last_12_layers_BERTweet_model,
@@ -411,7 +396,7 @@ def main() -> None:
             prediction_dataloader, model, prediction_inputs, device)
         predictions_list.append(predictions)
 
-        file = "./export/predictions-bertweet{}.txt".format(bert_index)
+        file = "./export/new-predictions-bertweet{}.txt".format(bert_index)
 
         f = open(file, "w")
         for i in predictions:

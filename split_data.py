@@ -17,18 +17,8 @@ print(df_train.shape)
 df_valid = pd.read_csv('./data/valid.csv')
 print(df_valid.shape)
 
-<<<<<<< HEAD
-df_test = pd.read_csv('./data/final_test.tsv', sep='\t')
-df_final_test = df_test['Label']
-df_final_test = pd.DataFrame(data=df_final_test)
-print(df_final_test)
-print(df_final_test.size)
-df_final_test.to_csv(path_or_buf="./data/final_test.csv", index=False)
-exit()
-=======
 df_test = pd.read_csv('./data/test.csv')
 print(df_test.shape)
->>>>>>> 5d4890fa392802b267b530176cd988b0b17cc54f
 
 df_total1 = pd.concat([df_train, df_valid], ignore_index=True)
 df_total = pd.concat([df_total1, df_test], ignore_index=True)
@@ -37,7 +27,8 @@ df_total = np.asarray(df_total)
 print(df_total.shape)
 print(type(df_total))
 
-X_train, X_test, y_train, y_test = train_test_split(df_total[:, 0] ,df_total[:, 1], train_size=0.9, random_state=RANDOM_STATE)
+X_train, X_test, y_train, y_test = train_test_split(
+    df_total[:, 0], df_total[:, 1], train_size=0.9, random_state=RANDOM_STATE)
 
 print("Number of instances in train is {}".format(X_train.size))  # 7200
 print("Number of instances in test is {}".format(X_test.size))    # 800
@@ -54,6 +45,3 @@ dfTrain.to_csv(path_or_buf="./data_join/train.csv", index=False)
 testData = {'Text': X_test, 'Label': y_test}
 dfTest = pd.DataFrame(data=testData)
 dfTest.to_csv(path_or_buf="./data_join/test.csv", index=False)
-
-
-
