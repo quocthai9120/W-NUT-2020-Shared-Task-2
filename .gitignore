@@ -16,8 +16,23 @@ last_4_layers-BERTweet-weights/
 data_join_global-local-BERTweet-weights/
 softmax/
 weights-for-ensembling/
+<<<<<<< HEAD
 last_2_mid_2-BERTweet-weights/
 last_12_layers-BERTweet-weights/
 more_last_4_layers-BERTweet-weights/
 more_last_4_layers-BERTweet-weights-2/
 one_for_all-BERTweet-weights/
+=======
+export/
+last2mid2-BERTweet-weights/
+softmax-bertweet16.txt
+softmax-bertweet17.txt
+softmax-bertweet18.txt
+stage_2_weights.pth
+vanillabert1.txt
+vanillabert2.txt
+vanillabert3.txt
+xlnet.txt
+xlnet2.txt
+xlnet3.txt
+>>>>>>> 4192a7e90f999035ac1b18c4f335d7cd882f2e2b

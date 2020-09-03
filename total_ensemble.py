@@ -5,7 +5,10 @@ import os
 # Hey, add your softmax output directory here
 softmax_path = "./export"
 
-listtovote = []
+short_listtovote = ['a', 'b', 'c']
+med_l... = ['a', 'd', 'e']
+long_ = [....]
+
 # Enumerate all softmax output files
 for f in os.listdir(softmax_path):
     print(f)
@@ -20,7 +23,15 @@ average_ensembling_predictions = ensemble_BERTweet.average_ensembling(
 major_voting_ensembling_predictions = ensemble_BERTweet.major_voting_ensembling(
     listtovote)
 
-ensemble_BERTweet.export(
-    "average_ensembling_predictions.txt", average_ensembling_predictions)
-ensemble_BERTweet.export(
-    "major_voting_ensembling_predictions.txt", major_voting_ensembling_predictions)
+submission_average_file = "./submission-avg.txt"
+submission_major_file = "./submission-major.txt"
+
+ensemble_BERTweet.export(submission_average_file, avg)
+ensemble_BERTweet.export(submission_major_file, major)
+
+
+def classify_length():
+
+# pre: dataframe
+# 0-22, 22-44, 44-max 
+# post: add a new column to the dataframe (0 - 1 - 2)
