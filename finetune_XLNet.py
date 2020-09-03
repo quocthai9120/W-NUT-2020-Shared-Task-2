@@ -41,7 +41,7 @@ else:
 
 
 # Prepare train data
-df_train = pd.read_csv('./train.tsv', sep='\t', lineterminator='\n', header=0)
+df_train = pd.read_csv('./data_join/train.csv')
 
 # Normalizing the tweets
 df_train['Text'] = df_train['Text'].apply(normalizeTweet)
@@ -95,7 +95,7 @@ for sent in train_text_data:
     encoded_dict = tokenizer.encode_plus(
         sent,                      # Sentence to encode.
         add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
-        max_length=256,
+        max_length=200,
         truncation=True,           # Pad & truncate all sentences.
         pad_to_max_length=True,
         return_attention_mask=True,   # Construct attn. masks.
@@ -122,21 +122,82 @@ train_labels = torch.tensor(train_labels)
 # Split data into train and validation set
 
 # Combine the training inputs into a TensorDataset.
-dataset = TensorDataset(input_ids, attention_masks, train_labels)
+train_dataset = TensorDataset(input_ids, attention_masks, train_labels)
 
 # Create a 90-10 train-validation split.
 # Calculate the number of samples to include in each set.
-train_size = int(0.9 * len(dataset))
-val_size = len(dataset) - train_size
 
-# Divide the dataset by randomly selecting samples.
-train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+# Prepare valid data
+df_valid = pd.read_csv('./data_join/test.csv')
+
+# Normalizing the tweets
+df_valid['Text'] = df_valid['Text'].apply(normalizeTweet)
+
+# Prepare validation data to the model
+valid_text_data = df_valid.Text
+valid_labels = df_valid.Label
+valid_labels = valid_labels.replace('INFORMATIVE', 1)
+valid_labels = valid_labels.replace('UNINFORMATIVE', 0)
+
+
+# Find the longest sentence in the dataset
+max_len = 0
+for t in valid_text_data:
+    # Tokenize the text and add `[CLS]` and `[SEP]` tokens.
+    input_ids = tokenizer.encode(t, add_special_tokens=True)
+    # Update the maximum sentence length.
+    max_len = max(max_len, len(input_ids))
+
+
+#####################
+
+# Tokenize dataset
+# Tokenize all of the sentences and map the tokens to thier word IDs.
+input_ids = []
+attention_masks = []
+
+for sent in valid_text_data:
+    # `encode_plus` will:
+    #   (1) Tokenize the sentence.
+    #   (2) Prepend the `[CLS]` token to the start.
+    #   (3) Append the `[SEP]` token to the end.
+    #   (4) Map tokens to their IDs.
+    #   (5) Pad or truncate the sentence to `max_length`
+    #   (6) Create attention masks for [PAD] tokens.
+    encoded_dict = tokenizer.encode_plus(
+        sent,                      # Sentence to encode.
+        add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
+        max_length=256,
+        truncation=True,           # Pad & truncate all sentences.
+        pad_to_max_length=True,
+        return_attention_mask=True,   # Construct attn. masks.
+        return_tensors='pt',     # Return pytorch tensors.
+    )
+
+    # Add the encoded sentence to the list.
+    input_ids.append(encoded_dict['input_ids'])
+
+    # And its attention mask (simply differentiates padding from non-padding).
+    attention_masks.append(encoded_dict['attention_mask'])
+
+# Convert the lists into tensors.
+input_ids = torch.cat(input_ids, dim=0)
+attention_masks = torch.cat(attention_masks, dim=0)
+valid_labels = torch.tensor(valid_labels)
+
+#############################
+
+# Combine the training inputs into a TensorDataset.
+val_dataset = TensorDataset(input_ids, attention_masks, valid_labels)
+
+
 
 
 # The DataLoader needs to know our batch size for training, so we specify it
 # here. For fine-tuning BERT on a specific task, the authors recommend a batch
 # size of 16 or 32.
-batch_size = 16
+batch_size = 8
 
 # Create the DataLoaders for our training and validation sets.
 # We'll take training samples in random order.
@@ -170,7 +231,7 @@ model.cuda()
 # Note: AdamW is a class from the huggingface library (as opposed to pytorch)
 # I believe the 'W' stands for 'Weight Decay fix"
 optimizer = AdamW(model.parameters(),
-                  lr=2e-5,  # args.learning_rate - default is 5e-5, our notebook had 2e-5
+                  lr=5e-5,  # args.learning_rate - default is 5e-5, our notebook had 2e-5
                   eps=1e-8  # args.adam_epsilon  - default is 1e-8.
                   )
 
@@ -178,7 +239,7 @@ optimizer = AdamW(model.parameters(),
 # Number of training epochs. The BERT authors recommend between 2 and 4.
 # We chose to run for 4, but we'll see later that this may be over-fitting the
 # training data.
-epochs = 4
+epochs = 8
 
 # Total number of training steps is [number of batches] x [number of epochs].
 # (Note that this is not the same as the number of training samples).
@@ -219,7 +280,7 @@ def format_time(elapsed):
 # https://github.com/huggingface/transformers/blob/5bfcd0485ece086ebcbed2d008813037968a9e58/examples/run_glue.py#L128
 
 # Set the seed value all over the place to make this reproducible.
-seed_val = 42
+seed_val = 99
 
 random.seed(seed_val)
 np.random.seed(seed_val)
