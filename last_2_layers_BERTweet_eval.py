@@ -23,7 +23,7 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
-from BERTweetForBinaryClassification import BERTweetForBinaryClassification
+from last_2_layers_BERTweet_model import BERTweetModelForClassification
 
 
 MAX_LENGTH = 256
@@ -127,9 +127,9 @@ def main() -> None:
         print('No GPU available, using the CPU instead.')
         device = torch.device("cpu")
 
-    model = BERTweetForBinaryClassification()
+    model = BERTweetModelForClassification()
     model.load_state_dict(torch.load(
-        "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+        "last_2_layers-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
     model.cuda()
 
@@ -207,7 +207,7 @@ def main() -> None:
     export_wrong_predictions(np.asarray(predictions),
                              np.asarray(true_labels), df_test)
 
-    file = "./predictions_original_val/finetune_BERTweet.txt"
+    file = "./predictions_original_val/last_2_layers_BERTweet.txt"
 
     f = open(file, "w")
     for i in predictions:
