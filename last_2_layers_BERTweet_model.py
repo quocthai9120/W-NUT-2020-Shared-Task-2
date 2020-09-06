@@ -22,7 +22,7 @@ class BERTweetModelForClassification(BertPreTrainedModel):
         self.dense = nn.Linear(in_features=768 * 2,
                                out_features=768,
                                )
-        self.dropout = nn.Dropout(p=0.2)
+        self.dropout = nn.Dropout(p=0.1)
         self.dense_2 = nn.Linear(in_features=768,
                                  out_features=256,
                                  )
