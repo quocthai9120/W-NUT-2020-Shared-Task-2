@@ -207,6 +207,13 @@ def main() -> None:
     export_wrong_predictions(np.asarray(predictions),
                              np.asarray(true_labels), df_test)
 
+    file = "./predictions_original_val/last_2_mid_2_BERTweet.txt"
+
+    f = open(file, "w")
+    for i in predictions:
+        f.write("{}, {} \n".format(i[0], i[1]))
+    f.close()
+
 
 if __name__ == "__main__":
     main()
