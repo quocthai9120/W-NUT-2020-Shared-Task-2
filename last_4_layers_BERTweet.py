@@ -112,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./more_last_4_layers-BERTweet-weights"
+    model_weights = "./last_4_layers-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -588,8 +588,8 @@ def main():
 
     ######################################## Prepare Data ########################################
     # Prepare train data
-    df_train: pd.DataFrame = pd.read_csv('./data_join/train.csv')
-    df_valid: pd.DataFrame = pd.read_csv('./data_join/test.csv')
+    df_train: pd.DataFrame = pd.read_csv('./data/train.csv')
+    df_valid: pd.DataFrame = pd.read_csv('./data/valid.csv')
 
     # Normalizing the tweets
     df_train['Text'] = df_train['Text'].apply(normalizeTweet)

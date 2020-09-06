@@ -366,50 +366,44 @@ def main() -> None:
     print(get_classification_report(np.asarray(true_labels),
                                     np.asarray(major_voting_ensembling_predictions), flattened=True))
 
- ###### FINAL TEST ####################
-    # Prepare data to test the model after training
-    df_final_test = pd.read_csv('./data/final_test.csv')
-    final_test_text_data = df_final_test.Text.apply(normalizeTweet)
+#  ###### FINAL TEST ####################
+#     # Prepare data to test the model after training
+#     df_final_test = pd.read_csv('./data/final_test.csv')
+#     final_test_text_data = df_final_test.Text.apply(normalizeTweet)
 
-    input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
-        final_test_text_data)
+#     input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
+#         final_test_text_data)
 
-    prediction_inputs: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[0], dim=0)
-    prediction_masks: torch.tensor = torch.cat(
-        input_ids_and_att_masks_tuple[1], dim=0)
+#     prediction_inputs: torch.tensor = torch.cat(
+#         input_ids_and_att_masks_tuple[0], dim=0)
+#     prediction_masks: torch.tensor = torch.cat(
+#         input_ids_and_att_masks_tuple[1], dim=0)
 
-    # Create the DataLoader.
-    prediction_data = TensorDataset(
-        prediction_inputs, prediction_masks)
-    # prediction_sampler = SequentialSampler(prediction_data)
-    prediction_dataloader = DataLoader(
-        prediction_data, batch_size=BATCH_SIZE)
+#     # Create the DataLoader.
+#     prediction_data = TensorDataset(
+#         prediction_inputs, prediction_masks)
+#     # prediction_sampler = SequentialSampler(prediction_data)
+#     prediction_dataloader = DataLoader(
+#         prediction_data, batch_size=BATCH_SIZE)
 
-    predictions_list = []
-    true_labels = None
-    bert_index = 0
-    for model in models:
-        print(bert_index)
-        bert_index += 1
-        predictions, softmax_outputs = final_test_predict(
-            prediction_dataloader, model, prediction_inputs, device)
-        predictions_list.append(predictions)
+#     predictions_list = []
+#     true_labels = None
+#     bert_index = 0
+#     for model in models:
+#         print(bert_index)
+#         bert_index += 1
+#         predictions, softmax_outputs = final_test_predict(
+#             prediction_dataloader, model, prediction_inputs, device)
+#         predictions_list.append(predictions)
 
-        file = "./export/new-predictions-bertweet{}.txt".format(bert_index)
+#         file = "./export/new-predictions-bertweet{}.txt".format(bert_index)
 
-        f = open(file, "w")
-        for i in predictions:
-            f.write("{}, {} \n".format(i[0], i[1]))
-        f.close()
+#         f = open(file, "w")
+#         for i in predictions:
+#             f.write("{}, {} \n".format(i[0], i[1]))
+#         f.close()
 
-        print("Number of predictions: {}".format(len(predictions)))
-
-        # exit()
-
-    #average_ensembling_predictions = average_ensembling(predictions_list)
-    # major_voting_ensembling_predictions = major_voting_ensembling(
-    #    predictions_list)
+#         print("Number of predictions: {}".format(len(predictions)))
 
 
 if __name__ == "__main__":
