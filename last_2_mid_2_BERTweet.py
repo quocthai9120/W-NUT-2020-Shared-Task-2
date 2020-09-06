@@ -588,8 +588,8 @@ def main():
 
     ######################################## Prepare Data ########################################
     # Prepare train data
-    df_train: pd.DataFrame = pd.read_csv('./data_join/train.csv')
-    df_valid: pd.DataFrame = pd.read_csv('./data_join/test.csv')
+    df_train: pd.DataFrame = pd.read_csv('./data/train.csv')
+    df_valid: pd.DataFrame = pd.read_csv('./data/valid.csv')
 
     # Normalizing the tweets
     df_train['Text'] = df_train['Text'].apply(normalizeTweet)
