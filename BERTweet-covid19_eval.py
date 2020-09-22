@@ -4,7 +4,7 @@ import numpy as np
 from numpy import random
 import nltk
 from sklearn.metrics import accuracy_score, confusion_matrix
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import re
 from torch.utils.data import TensorDataset, random_split
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
@@ -23,11 +23,11 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
-from global_local_BERTweet_model import BERTweetModelForClassification
+from BERTweet_covid19_model import BERTweetForBinaryClassification
 
 
 MAX_LENGTH = 256
-
+MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
 
 # Function to calculate the accuracy of our predictions vs labels
 
@@ -55,7 +55,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     print('Load BPE Tokenizer')
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     parser.add_argument('--bpe-codes',
-                        default="./BERTweet_base_transformers/bpe.codes",
+                        default=MODEL_PATH + "bpe.codes",
                         required=False,
                         type=str,
                         help='path to fastBPE BPE'
@@ -64,7 +64,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     bpe: argparse.Namespace = fastBPE(args)
 
     vocab: Dictionary = Dictionary()
-    vocab.add_from_file("./BERTweet_base_transformers/dict.txt")
+    vocab.add_from_file(MODEL_PATH + "vocab.txt")
 
     input_ids: List = []
     attention_masks: List = []
@@ -75,7 +75,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
         subwords: str = '<s> ' + \
-            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
+            bpe.encode(line) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -108,7 +108,7 @@ def export_wrong_predictions(preds: np.array, labels: np.array, data: pd.DataFra
         if pred_flat[i] != labels_flat[i]:
             wrong_pred_index.append(i)
     filtered_data = data[data.index.isin(wrong_pred_index)]
-    filtered_data.to_csv('new_finetune_BERTweet_wrong_preds.csv')
+    filtered_data.to_csv('finetune_BERTweet_wrong_preds.csv')
 
 
 def main() -> None:
@@ -127,10 +127,9 @@ def main() -> None:
         print('No GPU available, using the CPU instead.')
         device = torch.device("cpu")
 
-    model = torch.load(
-        "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    # model.load_state_dict(torch.load(
-    #     "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    model = BERTweetForBinaryClassification()
+    model.load_state_dict(torch.load(
+        "BERTweet-covid19-weights/stage_2_weights.pth", map_location=device))
 
     model.cuda()
 
@@ -141,7 +140,7 @@ def main() -> None:
     test_labels = test_labels.replace('INFORMATIVE', 1)
     test_labels = test_labels.replace('UNINFORMATIVE', 0)
 
-    batch_size = 32
+    batch_size = 16
 
     input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
         test_text_data)
@@ -198,9 +197,6 @@ def main() -> None:
             softmax_outputs.append(curr_softmax_outputs[i])
             true_labels.append(label_ids[i])
 
-    # torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
-    # torch.save(true_labels, "./softmax/true_labels.pt")
-
     print("  Accuracy: {0:.4f}".format(
         flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
     print("  F1-Score: {0:.4f}".format(
@@ -211,7 +207,7 @@ def main() -> None:
     export_wrong_predictions(np.asarray(predictions),
                              np.asarray(true_labels), df_test)
 
-    file = "./predictions_original_val/global_local_4_BERTweet.txt"
+    file = "./predictions_original_val/BERTweet-covid19.txt"
 
     f = open(file, "w")
     for i in predictions:

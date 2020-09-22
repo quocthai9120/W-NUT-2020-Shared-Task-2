@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from last_12_layers_BERTweet_model import BERTweetModelForClassification
+from last_2_first_2_BERTweet_model import BERTweetModelForClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -112,7 +112,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./last_12_layers-BERTweet-weights"
+    model_weights = "./last_2_first_2-BERTweet-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -133,8 +133,6 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
     model.dense.bias.requires_grad = True
     model.dense_2.weight.requires_grad = True
     model.dense_2.bias.requires_grad = True
-    model.dense_3.weight.requires_grad = True
-    model.dense_3.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     if device == torch.device("cuda"):
@@ -150,7 +148,7 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
 
     # Create the learning rate scheduler.
     scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                num_warmup_steps=1,  # Default value in run_glue.py
+                                                num_warmup_steps=0,  # Default value in run_glue.py
                                                 num_training_steps=total_steps)
 
     ######################################## Training ########################################
