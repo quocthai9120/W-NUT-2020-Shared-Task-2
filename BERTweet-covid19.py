@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from last_12_layers_BERTweet_model import BERTweetModelForClassification
+from BERTweet_covid19_model import BERTweetForBinaryClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -20,7 +20,8 @@ import os
 
 MAX_LENGTH: int = 256
 SEED_VAL: int = 912
-BATCH_SIZE: int = 16
+BATCH_SIZE: int = 32
+MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
 
 
 def format_time(elapsed) -> str:
@@ -65,7 +66,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     print('Load BPE Tokenizer')
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
     parser.add_argument('--bpe-codes',
-                        default="./BERTweet_base_transformers/bpe.codes",
+                        default=MODEL_PATH + "bpe.codes",
                         required=False,
                         type=str,
                         help='path to fastBPE BPE'
@@ -74,7 +75,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
     bpe: argparse.Namespace = fastBPE(args)
 
     vocab: Dictionary = Dictionary()
-    vocab.add_from_file("./BERTweet_base_transformers/dict.txt")
+    vocab.add_from_file(MODEL_PATH + "vocab.txt")
 
     input_ids: List = []
     attention_masks: List = []
@@ -85,7 +86,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
         subwords: str = '<s> ' + \
-            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
+            bpe.encode(line) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -112,7 +113,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
 
 def save_model_weights(model, file_name: str) -> None:
     # Save model weights
-    model_weights = "./last_12_layers-BERTweet-weights"
+    model_weights = "./BERTweet-covid19-weights"
 
     # Create output directory if needed
     if not os.path.exists(model_weights):
@@ -133,8 +134,6 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
     model.dense.bias.requires_grad = True
     model.dense_2.weight.requires_grad = True
     model.dense_2.bias.requires_grad = True
-    model.dense_3.weight.requires_grad = True
-    model.dense_3.bias.requires_grad = True
 
     # Tell pytorch to run this model on the GPU.
     if device == torch.device("cuda"):
@@ -150,7 +149,7 @@ def stage_1_training(model, train_dataloader, validation_dataloader, device, EPO
 
     # Create the learning rate scheduler.
     scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                num_warmup_steps=1,  # Default value in run_glue.py
+                                                num_warmup_steps=0,  # Default value in run_glue.py
                                                 num_training_steps=total_steps)
 
     ######################################## Training ########################################
@@ -650,11 +649,11 @@ def main():
     )
 
     ######################################## Initiate Model ########################################
-    model = BERTweetModelForClassification()
+    model = BERTweetForBinaryClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, EPOCHS=10)
+                     validation_dataloader, device, EPOCHS=13)
     # model.load_state_dict(torch.load(
-    #     "finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    #     "data_join-finetune-BERTweet-weights/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
                      validation_dataloader, device, EPOCHS=6)
 

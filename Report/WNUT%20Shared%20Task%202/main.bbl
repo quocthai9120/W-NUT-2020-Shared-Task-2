@@ -1,0 +1,89 @@
+\begin{thebibliography}{12}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{Conneau et~al.(2019)Conneau, Khandelwal, Goyal, Chaudhary, Wenzek,
+  Guzmán, Grave, Ott, Zettlemoyer, and Stoyanov}]{1911.02116}
+Alexis Conneau, Kartikay Khandelwal, Naman Goyal, Vishrav Chaudhary, Guillaume
+  Wenzek, Francisco Guzmán, Edouard Grave, Myle Ott, Luke Zettlemoyer, and
+  Veselin Stoyanov. 2019.
+\newblock \href {http://arxiv.org/abs/arXiv:1911.02116} {Unsupervised
+  cross-lingual representation learning at scale}.
+
+\bibitem[{Devlin et~al.(2018)Devlin, Chang, Lee, and Toutanova}]{1810.04805}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018.
+\newblock \href {http://arxiv.org/abs/arXiv:1810.04805} {Bert: Pre-training of
+  deep bidirectional transformers for language understanding}.
+
+\bibitem[{Liu et~al.(2019)Liu, Ott, Goyal, Du, Joshi, Chen, Levy, Lewis,
+  Zettlemoyer, and Stoyanov}]{1907.11692}
+Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer
+  Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019.
+\newblock \href {http://arxiv.org/abs/arXiv:1907.11692} {Roberta: A robustly
+  optimized bert pretraining approach}.
+
+\bibitem[{Loshchilov and Hutter(2019)}]{loshchilov2019decoupled}
+Ilya Loshchilov and Frank Hutter. 2019.
+\newblock \href {https://openreview.net/forum?id=Bkg6RiCqY7} {Decoupled weight
+  decay regularization}.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Nguyen et~al.(2020{\natexlab{a}})Nguyen, Vu, and Nguyen}]{BERTweet}
+Dat~Quoc Nguyen, Thanh Vu, and Anh~Tuan Nguyen. 2020{\natexlab{a}}.
+\newblock {BERTweet: A pre-trained language model for English Tweets}.
+\newblock \emph{arXiv preprint}, arXiv:2005.10200.
+
+\bibitem[{Nguyen et~al.(2020{\natexlab{b}})Nguyen, Vu, Rahimi, Dao, Nguyen, and
+  Doan}]{covid19tweet}
+Dat~Quoc Nguyen, Thanh Vu, Afshin Rahimi, Mai~Hoang Dao, Linh~The Nguyen, and
+  Long Doan. 2020{\natexlab{b}}.
+\newblock {WNUT-2020 Task 2: Identification of Informative COVID-19 English
+  Tweets}.
+\newblock In \emph{Proceedings of the 6th Workshop on Noisy User-generated
+  Text}.
+
+\bibitem[{Paszke et~al.(2017)Paszke, Gross, Chintala, Chanan, Yang, DeVito,
+  Lin, Desmaison, Antiga, and Lerer}]{paszke2017automatic}
+Adam Paszke, Sam Gross, Soumith Chintala, Gregory Chanan, Edward Yang, Zachary
+  DeVito, Zeming Lin, Alban Desmaison, Luca Antiga, and Adam Lerer. 2017.
+\newblock Automatic differentiation in pytorch.
+
+\bibitem[{Pedregosa et~al.(2011)Pedregosa, Varoquaux, Gramfort, Michel,
+  Thirion, Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
+  Cournapeau, Brucher, Perrot, and Duchesnay}]{scikit-learn}
+F.~Pedregosa, G.~Varoquaux, A.~Gramfort, V.~Michel, B.~Thirion, O.~Grisel,
+  M.~Blondel, P.~Prettenhofer, R.~Weiss, V.~Dubourg, J.~Vanderplas, A.~Passos,
+  D.~Cournapeau, M.~Brucher, M.~Perrot, and E.~Duchesnay. 2011.
+\newblock Scikit-learn: Machine learning in {P}ython.
+\newblock \emph{Journal of Machine Learning Research}, 12:2825--2830.
+
+\bibitem[{Peters et~al.(2018)Peters, Neumann, Iyyer, Gardner, Clark, Lee, and
+  Zettlemoyer}]{1802.05365}
+Matthew~E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark,
+  Kenton Lee, and Luke Zettlemoyer. 2018.
+\newblock \href {http://arxiv.org/abs/arXiv:1802.05365} {Deep contextualized
+  word representations}.
+
+\bibitem[{Sennrich et~al.(2015)Sennrich, Haddow, and Birch}]{1508.07909}
+Rico Sennrich, Barry Haddow, and Alexandra Birch. 2015.
+\newblock \href {http://arxiv.org/abs/arXiv:1508.07909} {Neural machine
+  translation of rare words with subword units}.
+
+\bibitem[{Wolf et~al.(2019)Wolf, Debut, Sanh, Chaumond, Delangue, Moi, Cistac,
+  Rault, Louf, Funtowicz, Davison, Shleifer, von Platen, Ma, Jernite, Plu, Xu,
+  Scao, Gugger, Drame, Lhoest, and Rush}]{1910.03771}
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue,
+  Anthony Moi, Pierric Cistac, Tim Rault, Rémi Louf, Morgan Funtowicz, Joe
+  Davison, Sam Shleifer, Patrick von Platen, Clara Ma, Yacine Jernite, Julien
+  Plu, Canwen Xu, Teven~Le Scao, Sylvain Gugger, Mariama Drame, Quentin Lhoest,
+  and Alexander~M. Rush. 2019.
+\newblock \href {http://arxiv.org/abs/arXiv:1910.03771} {Huggingface's
+  transformers: State-of-the-art natural language processing}.
+
+\bibitem[{Yang et~al.(2019)Yang, Dai, Yang, Carbonell, Salakhutdinov, and
+  Le}]{1906.08237}
+Zhilin Yang, Zihang Dai, Yiming Yang, Jaime Carbonell, Ruslan Salakhutdinov,
+  and Quoc~V. Le. 2019.
+\newblock \href {http://arxiv.org/abs/arXiv:1906.08237} {Xlnet: Generalized
+  autoregressive pretraining for language understanding}.
+
+\end{thebibliography}

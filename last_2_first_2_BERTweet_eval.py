@@ -23,7 +23,7 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
-from global_local_BERTweet_model import BERTweetModelForClassification
+from last_2_first_2_BERTweet_model import BERTweetModelForClassification
 
 
 MAX_LENGTH = 256
@@ -127,10 +127,9 @@ def main() -> None:
         print('No GPU available, using the CPU instead.')
         device = torch.device("cpu")
 
-    model = torch.load(
-        "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device)
-    # model.load_state_dict(torch.load(
-    #     "global-local-BERTweet-weights/stage_2_weights.pth", map_location=device))
+    model = BERTweetModelForClassification()
+    model.load_state_dict(torch.load(
+        "last_2_first_2-BERTweet-weights/stage_2_weights.pth", map_location=device))
 
     model.cuda()
 
@@ -141,7 +140,7 @@ def main() -> None:
     test_labels = test_labels.replace('INFORMATIVE', 1)
     test_labels = test_labels.replace('UNINFORMATIVE', 0)
 
-    batch_size = 32
+    batch_size = 16
 
     input_ids_and_att_masks_tuple: Tuple[List, List] = get_input_ids_and_att_masks(
         test_text_data)
@@ -198,9 +197,6 @@ def main() -> None:
             softmax_outputs.append(curr_softmax_outputs[i])
             true_labels.append(label_ids[i])
 
-    # torch.save(softmax_outputs, "./softmax/BERTweet_softmax/test_softmax.pt")
-    # torch.save(true_labels, "./softmax/true_labels.pt")
-
     print("  Accuracy: {0:.4f}".format(
         flat_accuracy(np.asarray(predictions), np.asarray(true_labels))))
     print("  F1-Score: {0:.4f}".format(
@@ -211,7 +207,7 @@ def main() -> None:
     export_wrong_predictions(np.asarray(predictions),
                              np.asarray(true_labels), df_test)
 
-    file = "./predictions_original_val/global_local_4_BERTweet.txt"
+    file = "./predictions_original_val/last_2_first_2_BERTweet.txt"
 
     f = open(file, "w")
     for i in predictions:
