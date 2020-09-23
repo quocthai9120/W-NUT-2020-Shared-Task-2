@@ -1,27 +1,27 @@
-from transformers import RobertaConfig, RobertaModel, BertPreTrainedModel
+from transformers import BertConfig, BertModel, BertPreTrainedModel
 from torch.nn import CrossEntropyLoss
 from torch import nn
 from typing import Tuple
 import torch
 
-MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
+MODEL_PATH: str = "./CTBERT/"
 
 
-class BERTweetForBinaryClassification(BertPreTrainedModel):
-    base_model_prefix = "roberta"
+class CTBERTForBinaryClassification(BertPreTrainedModel):
+    base_model_prefix = "bert"
 
     def __init__(self):
         self.num_labels: int = 2
-        config: RobertaConfig = RobertaConfig.from_pretrained(
+        config: BertConfig = BertConfig.from_pretrained(
             MODEL_PATH + "config.json",
             output_hidden_states=True,
         )
         super().__init__(config)
-        self.model: RobertaModel = RobertaModel.from_pretrained(
+        self.model: BertModel = BertModel.from_pretrained(
             MODEL_PATH + "pytorch_model.bin",
             config=config
         )
-        self.dense = nn.Linear(in_features=768,
+        self.dense = nn.Linear(in_features=1024,
                                out_features=128,
                                )
         self.dropout = nn.Dropout(p=0.2)

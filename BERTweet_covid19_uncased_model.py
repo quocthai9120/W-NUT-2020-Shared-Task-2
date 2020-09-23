@@ -4,7 +4,7 @@ from torch import nn
 from typing import Tuple
 import torch
 
-MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
+MODEL_PATH: str = "./BERTweet-covid19-base-uncased/"
 
 
 class BERTweetForBinaryClassification(BertPreTrainedModel):
