@@ -7,8 +7,8 @@ import random
 import datetime
 import time
 from TweetNormalizer import normalizeTweet
-from transformers import AdamW, get_linear_schedule_with_warmup
-from BERTweet_covid19_model import BERTweetForBinaryClassification
+from transformers import AdamW, get_linear_schedule_with_warmup, AutoTokenizer
+from CTBERT_model import CTBERTForBinaryClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -19,10 +19,8 @@ import os
 
 
 MAX_LENGTH: int = 256
-# SEED_VAL: int = 69
 BATCH_SIZE: int = 32
-MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
-# MODEL_WEIGHTS_PATH: str = "./BERTweet-covid19-uncased-weights-"
+MODEL_PATH: str = "./CTBERT/"
 
 
 def format_time(elapsed) -> str:
@@ -63,51 +61,38 @@ def setup_device() -> torch.device:
 
 
 def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, List]:
-    # Load BPE Tokenizer
-    print('Load BPE Tokenizer')
-    parser: argparse.ArgumentParser = argparse.ArgumentParser()
-    parser.add_argument('--bpe-codes',
-                        default=MODEL_PATH + "bpe.codes",
-                        required=False,
-                        type=str,
-                        help='path to fastBPE BPE'
-                        )
-    args: fastBPE = parser.parse_args()
-    bpe: argparse.Namespace = fastBPE(args)
+    # Load the CTBERT tokenizer.
+    print('Loading CTBERT tokenizer...')
+    tokenizer = AutoTokenizer.from_pretrained("CTBERT")
 
-    vocab: Dictionary = Dictionary()
-    vocab.add_from_file(MODEL_PATH + "vocab.txt")
+    # Tokenize dataset
+    # Tokenize all of the sentences and map the tokens to thier word IDs.
+    input_ids = []
+    attention_masks = []
 
-    input_ids: List = []
-    attention_masks: List = []
-    for line in lines:
-        # (1) Tokenize the sentence
-        # (2) Add <CLS> token and <SEP> token (<s> and </s>)
-        # (3) Map tokens to IDs
-        # (4) Pad/Truncate the sentence to `max_length`
-        # (5) Create attention masks for [PAD] tokens
-        subwords: str = '<s> ' + \
-            bpe.encode(line) + ' </s>'  # (1) + (2)
-        line_ids: List = vocab.encode_line(
-            subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
+    for sent in lines:
+        # `encode_plus` will:
+        #   (1) Tokenize the sentence.
+        #   (2) Prepend the `[CLS]` token to the start.
+        #   (3) Append the `[SEP]` token to the end.
+        #   (4) Map tokens to their IDs.
+        #   (5) Pad or truncate the sentence to `max_length`
+        #   (6) Create attention masks for [PAD] tokens.
+        encoded_dict = tokenizer.encode_plus(
+            sent,                      # Sentence to encode.
+            add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
+            max_length=256,
+            truncation=True,           # Pad & truncate all sentences.
+            pad_to_max_length=True,
+            return_attention_mask=True,   # Construct attn. masks.
+            return_tensors='pt',     # Return pytorch tensors.
+        )
 
-        if len(line_ids) < MAX_LENGTH:
-            paddings: torch.tensor = torch.ones(
-                (1, MAX_LENGTH - len(line_ids)), dtype=torch.long)
-            # convert the line_ids to torch tensor
-            tensor_line_ids: torch.tensor = torch.cat([torch.tensor(
-                [line_ids], dtype=torch.long), paddings], dim=1)
-            line_attention_masks: torch.tensor = torch.cat([torch.ones(
-                (1, len(line_ids)), dtype=torch.long), torch.zeros(
-                (1, MAX_LENGTH - len(line_ids)), dtype=torch.long)], dim=1)
-        elif len(line_ids) > MAX_LENGTH:
-            tensor_line_ids: torch.tensor = torch.tensor(
-                [line_ids[0:MAX_LENGTH]], dtype=torch.long)
-            line_attention_masks: torch.tensor = torch.ones(
-                (1, MAX_LENGTH), dtype=torch.long)
+        # Add the encoded sentence to the list.
+        input_ids.append(encoded_dict['input_ids'])
 
-        input_ids.append(tensor_line_ids)
-        attention_masks.append(line_attention_masks)
+        # And its attention mask (simply differentiates padding from non-padding).
+        attention_masks.append(encoded_dict['attention_mask'])
 
     return tuple([input_ids, attention_masks])
 
@@ -653,20 +638,20 @@ def main(SEED_VAL, MODEL_WEIGHTS_PATH):
     )
 
     ######################################## Initiate Model ########################################
-    model = BERTweetForBinaryClassification()
+    model = CTBERTForBinaryClassification()
     stage_1_training(model, train_dataloader,
-                     validation_dataloader, device, 12, MODEL_WEIGHTS_PATH, SEED_VAL)
+                     validation_dataloader, device, 8, MODEL_WEIGHTS_PATH, SEED_VAL)
     # model.load_state_dict(torch.load(
-    #     "BERTweet-covid19-cased-weights-1/stage_2_weights.pth", map_location=device))
+    #     "CTBERT-weights-1/stage_2_weights.pth", map_location=device))
     stage_2_training(model, train_dataloader,
-                     validation_dataloader, device, 7, MODEL_WEIGHTS_PATH, SEED_VAL)
+                     validation_dataloader, device, 10, MODEL_WEIGHTS_PATH, SEED_VAL)
 
 
 def final_main():
-    arr = [91, 901, 9120]
-    for i in range(3):
+    arr = [69, 912, 91, 901, 9120]
+    for i in range(5):
         SEED_VAL = arr[i]
-        MODEL_WEIGHTS_PATH = "./BERTweet-covid19-cased-weights-" + str(i + 7)
+        MODEL_WEIGHTS_PATH = "./CTBERT-weights-" + str(i + 1)
         main(SEED_VAL, MODEL_WEIGHTS_PATH)
 
 

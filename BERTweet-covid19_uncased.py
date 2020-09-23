@@ -8,7 +8,7 @@ import datetime
 import time
 from TweetNormalizer import normalizeTweet
 from transformers import AdamW, get_linear_schedule_with_warmup
-from BERTweet_covid19_model import BERTweetForBinaryClassification
+from BERTweet_covid19_uncased_model import BERTweetForBinaryClassification
 
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
@@ -21,7 +21,7 @@ import os
 MAX_LENGTH: int = 256
 # SEED_VAL: int = 69
 BATCH_SIZE: int = 32
-MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
+MODEL_PATH: str = "./BERTweet-covid19-base-uncased/"
 # MODEL_WEIGHTS_PATH: str = "./BERTweet-covid19-uncased-weights-"
 
 
@@ -87,7 +87,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
         subwords: str = '<s> ' + \
-            bpe.encode(line) + ' </s>'  # (1) + (2)
+            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -666,7 +666,7 @@ def final_main():
     arr = [91, 901, 9120]
     for i in range(3):
         SEED_VAL = arr[i]
-        MODEL_WEIGHTS_PATH = "./BERTweet-covid19-cased-weights-" + str(i + 7)
+        MODEL_WEIGHTS_PATH = "./BERTweet-covid19-uncased-weights-" + str(i + 9)
         main(SEED_VAL, MODEL_WEIGHTS_PATH)
 
 

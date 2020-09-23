@@ -23,11 +23,11 @@ import argparse
 from fairseq.data.encoders.fastbpe import fastBPE
 from fairseq.data import Dictionary
 
-from BERTweet_covid19_model import BERTweetForBinaryClassification
+from BERTweetForBinaryClassification import BERTweetForBinaryClassification
 
 
 MAX_LENGTH = 256
-MODEL_PATH: str = "./BERTweet-covid19-base-cased/"
+MODEL_PATH: str = "./BERTweet_base_transformers/"
 
 # Function to calculate the accuracy of our predictions vs labels
 
@@ -75,7 +75,7 @@ def get_input_ids_and_att_masks(lines: pd.core.series.Series) -> Tuple[List, Lis
         # (4) Pad/Truncate the sentence to `max_length`
         # (5) Create attention masks for [PAD] tokens
         subwords: str = '<s> ' + \
-            bpe.encode(line) + ' </s>'  # (1) + (2)
+            bpe.encode(line.lower()) + ' </s>'  # (1) + (2)
         line_ids: List = vocab.encode_line(
             subwords, append_eos=False, add_if_not_exist=False).long().tolist()  # (3)
 
@@ -154,11 +154,11 @@ def main() -> None:
 
     # Load model
 
-    for dir_index in range(3):
+    for dir_index in range(5):
         for epoch_index in range(7):
             model = BERTweetForBinaryClassification()
             model.load_state_dict(torch.load(
-                "BERTweet-covid19-cased-weights-" + str(dir_index + 7) + "/stage_2_weights_epoch_" + str(epoch_index) + ".pth", map_location=device))
+                "vanilla-BERTweet-weights-" + str(dir_index) + "/stage_2_weights_epoch_" + str(epoch_index) + ".pth", map_location=device))
 
             model.cuda()
 
@@ -213,8 +213,7 @@ def main() -> None:
             export_wrong_predictions(np.asarray(predictions),
                                      np.asarray(true_labels), df_test)
 
-            pred_path = "BERTweet-covid19-cased-predictions-" + \
-                str(dir_index + 7)
+            pred_path = "vanilla_BERTweet-predictions-" + str(dir_index)
             if not os.path.exists(pred_path):
                 os.makedirs(pred_path)
 
